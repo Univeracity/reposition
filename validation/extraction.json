@@ -1,6 +1,6 @@
 {
   "schema": "reposition.extraction.v1",
-  "checked_at": "2026-09-27T05:58:33.750742+00:00",
+  "checked_at": "2026-09-27T07:49:40.932349+00:00",
   "environment": {
     "python": "3.12.3",
     "sqlite": "3.45.1",
@@ -16,8 +16,8 @@
     "src/reposition/index.py": "7509d0349d2f2a5b8f3d25cabd2d4865836d1b609a63876317ccdab5bdd44e21",
     "src/reposition/models.py": "d9647f2a4bdffeccbc86a28cfe4eb3d2737165f41d967397738fd315bb92bc85",
     "src/reposition/query.py": "ebaa44b9e6adf8809b3df9c1835a55e5174da59f32ed4bba04ed9d2f454893a6",
-    "src/reposition/relations.py": "8f7bb21a478f615aaaf9821935ecce722f3c479f5dd5f59081d4c703db41298e",
-    "src/reposition/render.py": "6644b7c4127984fe6a6aabd063143293acf536b37a9776f0cd40fbe7de58ff29",
+    "src/reposition/relations.py": "884f3469282dc7e9b038cab336f91d97332fb219eb6b17f5852ebf8a2cd35faf",
+    "src/reposition/render.py": "bd2732fcf073d13d9fd78bbda963e3add3d7dd93ed246e2c05bdf4928f494794",
     "src/reposition/tfidf.py": "c2588319363f41a71021674ad5c1425f02b8e5b3966303289350e40c3ae5a843"
   },
   "repositories": {
@@ -40,7 +40,7 @@
         "tfidf": {
           "ranking_parity_queries": 80,
           "complete_outputs": 160,
-          "excerpt_checks": 660,
+          "excerpt_checks": 664,
           "passed": true
         }
       }
@@ -58,13 +58,13 @@
         "fts5": {
           "ranking_parity_queries": 85,
           "complete_outputs": 170,
-          "excerpt_checks": 691,
+          "excerpt_checks": 704,
           "passed": true
         },
         "tfidf": {
           "ranking_parity_queries": 85,
           "complete_outputs": 170,
-          "excerpt_checks": 706,
+          "excerpt_checks": 715,
           "passed": true
         }
       }

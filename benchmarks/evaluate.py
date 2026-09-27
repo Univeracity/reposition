@@ -8,7 +8,7 @@ import math
 import statistics
 from time import perf_counter
 
-from reposition import Index, load_snapshot
+from reposition import Index, load_snapshot, render
 
 
 def metrics(items, relevance, negatives, k):
@@ -34,7 +34,23 @@ def metrics(items, relevance, negatives, k):
     }
 
 
-def main():
+def evidence_metrics(evidence, retrieved, relevance, negatives):
+    positive = {str(item) for item, grade in relevance.items() if grade > 0}
+    cited = {e["item"] for e in evidence.excerpts}
+    retrieved_positive = set(retrieved) & positive
+    return {
+        "known_positive_citation_recall": len(cited & positive) / len(positive)
+        if positive
+        else None,
+        "retrieved_positive_citation_retention": len(cited & retrieved_positive)
+        / len(retrieved_positive)
+        if retrieved_positive
+        else None,
+        "hard_negative_citations": sorted(cited & {str(item) for item in negatives}),
+    }
+
+
+def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("snapshot")
     parser.add_argument(
@@ -48,9 +64,23 @@ def main():
     parser.add_argument("--repeats", type=int, default=5)
     parser.add_argument("--limit", type=int, default=10)
     parser.add_argument("--candidates", type=int, default=100)
-    args = parser.parse_args()
+    budgets = parser.add_mutually_exclusive_group()
+    budgets.add_argument(
+        "--chars", type=int, help="complete evidence character budget (default 8000)"
+    )
+    budgets.add_argument(
+        "--tokens", type=int, help="complete evidence token budget; needs [tokens]"
+    )
+    parser.add_argument("--encoding", default="o200k_base")
+    args = parser.parse_args(argv)
     if args.repeats < 1:
         parser.error("repeats must be positive")
+    budget = (
+        args.tokens if args.tokens is not None else (args.chars if args.chars is not None else 8000)
+    )
+    if budget <= 0:
+        parser.error("evidence budget must be positive")
+    unit = "tokens" if args.tokens is not None else "characters"
     with open(args.cases, encoding="utf-8") as stream:
         labels = json.load(stream)
     snapshot = load_snapshot(
@@ -86,6 +116,9 @@ def main():
                         raise RuntimeError("warm ranking changed")
                 warm.extend(samples)
                 items = [h.record.item for h in result.hits]
+                started = perf_counter()
+                evidence = render(result, budget=budget, unit=unit, encoding=args.encoding)
+                render_ms = (perf_counter() - started) * 1000
                 rows.append(
                     {
                         "id": case["id"],
@@ -96,10 +129,22 @@ def main():
                         ),
                         "warm_ms": samples,
                         "diagnostics": result.diagnostics,
+                        "evidence": {
+                            **evidence.to_dict(),
+                            "metrics": evidence_metrics(
+                                evidence, items, case["relevance"], case.get("hard_negatives", [])
+                            ),
+                            "render_ms": render_ms,
+                        },
                     }
                 )
             positives = [
                 r["metrics"] for r in rows if r["metrics"]["known_positive_recall"] is not None
+            ]
+            citations = [
+                r["evidence"]["metrics"]["known_positive_citation_recall"]
+                for r in rows
+                if r["evidence"]["metrics"]["known_positive_citation_recall"] is not None
             ]
             outputs[method] = {
                 "first_query_including_preparation_ms": first_query_ms,
@@ -110,6 +155,9 @@ def main():
                 if positives
                 else None,
                 "mean_mrr": statistics.fmean(m["mrr"] for m in positives) if positives else None,
+                "mean_known_positive_citation_recall": statistics.fmean(citations)
+                if citations
+                else None,
                 "cases": rows,
             }
     print(
@@ -125,8 +173,11 @@ def main():
                     "warm_repeats": args.repeats,
                     "tokenizer": "unicode61",
                     "title_weight": 3,
+                    "evidence_budget": budget,
+                    "evidence_unit": unit,
+                    "evidence_encoding": args.encoding if unit == "tokens" else None,
                 },
-                "limits": "known labels may be incomplete; unjudged hits are not false positives; no reviewer time or decision-quality measurement",
+                "limits": "known labels may be incomplete; unjudged hits are not false positives; citation retention does not establish excerpt sufficiency; evidence budgets exclude this JSON wrapper; no reviewer time or decision-quality measurement",
                 "import_ms": import_ms,
                 "methods": outputs,
             },

@@ -50,7 +50,8 @@ record format and the earlier experiment's component-cache adapter.
 - Source URI, revision, exact excerpt offsets, and SHA-256 hashes for each citation.
 - Visible candidate caps, omitted hits, excerpt truncation, and unknown coverage.
 - Incoming and outgoing literal references, including missing or external targets.
-  A phrase such as “fixes #40” is retained as a source claim.
+  A phrase such as “fixes #40” is retained as a source claim with its surrounding
+  wording; negated or uncertain wording remains a generic reference.
 
 Leading `#40` anchors select that item's summary before lexical results. Quoted
 phrases are preserved; ordinary terms use any-term matching. Results are ranked
@@ -105,8 +106,15 @@ python -m build
 python scripts/check_dist.py
 python scripts/smoke_wheel.py dist/*.whl
 python benchmarks/evaluate.py examples/github-cache.json examples/cases.json \
-  --format github --repo example/packages --methods fts5 tfidf
+  --format github --repo example/packages --methods fts5 tfidf --tokens 1024
 ```
+
+The benchmark reports retrieval recall and citation retention separately at the
+chosen complete evidence budget (`--chars` or `--tokens`). Each case includes the
+rendered text, source-bound excerpts, omitted hits, and rendering time. Citation
+retention does not establish that an excerpt supports a correct review decision;
+independent review is still needed. The report's JSON wrapper is outside that
+evidence budget.
 
 See [design](docs/design.md) and [next steps](docs/roadmap.md). Source code is MIT
 licensed, with the adapted Vyral query policy under Apache-2.0 as described in

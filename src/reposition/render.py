@@ -7,6 +7,33 @@ from dataclasses import asdict, dataclass
 from typing import Any
 
 from .models import SearchResult, canonical, sha256
+from .query import expression
+
+
+def _match_span(text: str, query: str) -> tuple[int, int] | None:
+    """Find a literal query span without changing the source's code-point offsets."""
+    spans = []
+    for literal in re.findall(r'"([^\"]+)"', expression(query)):
+        words = literal.split()
+        pattern = r"(?<![^\W_])" + r"[\W_]+".join(map(re.escape, words)) + r"(?![^\W_])"
+        match = re.search(pattern, text, re.IGNORECASE)
+        if match:
+            spans.append(match.span())
+        elif len(words) > 1:
+            # TF-IDF flattens phrases; retain a matching term when no phrase is present.
+            for word in words:
+                match = re.search(
+                    r"(?<![^\W_])" + re.escape(word) + r"(?![^\W_])", text, re.IGNORECASE
+                )
+                if match:
+                    spans.append(match.span())
+    return min(spans) if spans else None
+
+
+def _window(text: str, size: int, span: tuple[int, int] | None) -> tuple[int, str]:
+    before = min(100, (size - (span[1] - span[0])) // 2) if span else 0
+    start = max(0, span[0] - before) if span else 0
+    return start, text[start : start + size]
 
 
 @dataclass(frozen=True)
@@ -76,43 +103,39 @@ def render(
     truncated = False
     for hit in result.hits:
         record = hit.record
-        # Query-centered source slice. Positions remain code-point offsets in original text.
-        positions = [
-            match.start()
-            for term in set(re.findall(r"[a-z0-9]+", result.query.lower()))
-            if len(term) >= 4
-            for match in [re.search(re.escape(term), record.text, re.IGNORECASE)]
-            if match
-        ]
-        start = max(0, min(positions) - 100) if positions else 0
-        text = record.text[start : start + excerpt_chars]
+        span = _match_span(record.text, result.query)
+        minimum = span[1] - span[0] if span else min(1, len(record.text))
+        size = min(excerpt_chars, len(record.text))
         prefix = (
             f"\n[{result.repository}#{record.item}/{record.component}] {record.title}\n"
             f"{record.uri}\nRevision: {record.source_revision}; coverage: {canonical(record.coverage)}; "
             f"partial: {canonical(record.partial)}\n"
         )
 
-        def block(
-            value: str, citation: str = prefix, source_offset: int = record.source_start + start
-        ) -> str:
+        def block(value: str, source_offset: int, citation: str = prefix) -> str:
             return (
                 citation + f"Span: {source_offset}:{source_offset + len(value)} "
                 f"codepoints; excerpt sha256: {sha256(value)}\n" + value + "\n"
             )
 
         omitted = len(result.hits) - len(excerpts) - 1
-        while True:
+        fitted = None
+        while size >= minimum:
+            # Recenter every smaller window so budgeting cannot remove the matched span.
+            start, text = _window(record.text, size, span)
             current_truncated = start > 0 or start + len(text) < len(record.text)
-            candidate = output + block(text) + footer(omitted, truncated or current_truncated)
+            candidate_block = block(text, record.source_start + start)
+            candidate = output + candidate_block + footer(omitted, truncated or current_truncated)
             if count(candidate) <= budget:
+                fitted = candidate_block
                 break
-            if not text:
-                candidate = None
+            if size == minimum:
                 break
-            text = text[: -max(1, len(text) // 8)]
-        if candidate is None:
-            break
-        output += block(text)
+            size = max(minimum, size - max(1, size // 8))
+        if fitted is None:
+            # A later hit may have shorter citation metadata and still fit.
+            continue
+        output += fitted
         truncated |= current_truncated
         excerpts.append(
             {

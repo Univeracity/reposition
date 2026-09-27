@@ -1,16 +1,18 @@
-# Initial local qualification
+# Local qualification
 
 Locally checked on Python 3.12.3:
 
-- 30 unit/integration tests passed with optional dependencies installed.
+- 40 unit/integration tests passed with optional dependencies installed, including
+  matching-span retention, conservative relationship wording, and budgeted
+  benchmark citation metrics.
 - Installed-wheel core tests passed in a fresh environment without third-party
-  runtime dependencies; four optional tests were skipped.
+  runtime dependencies; five optional tests were skipped.
 - Ruff lint and formatting checks passed.
 - Source and wheel builds passed. Distribution checks exclude caches and local
   agent coordination files, and confirm license attribution is included.
 - FTS5 and TF-IDF each reproduced all 165 frozen query rankings, over two isolated
   repository corpora. In total: 330 ranking checks, 660 complete token-budgeted
-  outputs and 2,708 independently checked source excerpts.
+  outputs and 2,734 independently checked source excerpts.
 
 [Extraction receipt](extraction.json) binds source implementation and input
 digests. [Wheel smoke receipt](wheel-smoke.json) confirms installation, CLI

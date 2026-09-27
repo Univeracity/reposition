@@ -31,11 +31,23 @@ half-open `[start,end)` ranges, with both record-relative and source-relative
 positions. Excerpt hashes cover original UTF-8 text. Budget accounting includes
 the whole formatted text. JSON containers and diagnostic record payloads are
 outside that text budget. Too-small budgets fail explicitly.
+When a literal query span is found in the body, shrinking windows retain that
+whole span. A hit is omitted if its span and citation cannot fit; later hits may
+still fit. Nonempty bodies never become empty citations during budgeting. Empty
+source bodies and title-only matches remain citable. Literal span selection is
+an excerpt heuristic, not a reproduction of SQLite's tokenizer or a guarantee
+of evidence sufficiency.
 
 Literal relationship navigation is one hop, restricted to discussion components.
 Qualified external references retain their repository identity. File patches are
 excluded to avoid interpreting code hashtags as discussion links. “Claims fixes”
 does not establish a fix, equivalence, or duplicate. Missing targets remain visible.
+Fix claims use conservative literal wording checks within a bounded local clause;
+negation, questions, conditional wording, quotes, and incomplete context retain
+the generic `references` predicate. Evidence cites that clause with original
+offsets and a hash. The separate `reference` field retains the exact link and its
+own source offsets/hash. These checks do not interpret arbitrary natural language
+or prove that a claimed fix works.
 
 Optional TF-IDF uses SQLite's token stream, smooth corpus-wide IDF, raw term
 frequency, 3:1 field weighting and L2 normalization. Queries never participate in

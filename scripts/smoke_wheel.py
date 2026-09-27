@@ -6,6 +6,7 @@ import argparse
 import hashlib
 import json
 import os
+import re
 import shutil
 import subprocess
 import sys
@@ -76,7 +77,8 @@ def smoke(wheel: Path) -> dict:
         if "[tfidf]" not in error:
             raise RuntimeError("missing tfidf extra has no actionable message")
         tests, errors = run("-m", "unittest", "discover", "-s", str(root / "tests"), "-v")
-        if "OK (skipped=4)" not in tests + errors:
+        skipped = re.search(r"OK \(skipped=(\d+)\)", tests + errors)
+        if skipped is None:
             raise RuntimeError(
                 "dependency-free installed-wheel tests did not pass with optional checks skipped"
             )
@@ -88,7 +90,7 @@ def smoke(wheel: Path) -> dict:
         "cli_import_search_relations_export": True,
         "missing_extras_actionable": True,
         "core_tests_passed": True,
-        "optional_tests_skipped": 4,
+        "optional_tests_skipped": int(skipped[1]),
         "passed": True,
     }
 

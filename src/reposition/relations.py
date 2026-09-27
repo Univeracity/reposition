@@ -11,6 +11,40 @@ REFERENCE = re.compile(
     r"https?://github\.com/([A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+)/(?:issues|pull)/(\d+)"
     r"|([A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+)#(\d+)"
 )
+CLAIM_VERB = re.compile(r"\b(?:close[sd]?|fix(?:e[sd])?|resolve[sd]?)\s*$", re.IGNORECASE)
+UNCERTAIN = re.compile(
+    r"\b(?:no|not|never|neither|nor|without|cannot|unable|fail(?:s|ed)?|"
+    r"if|unless|whether|should|would|could|may|might|can|will|must|please|"
+    r"perhaps|maybe|possibly|unsure|doubt|hope|plan|propos\w*|try|attempt)\b"
+    r"|\b\w+n['’]t\b",
+    re.IGNORECASE,
+)
+CLAUSE_BREAK = re.compile(r"[!?;]|(?<!\w)\.|\.(?!\w)|\n[ \t]*\n")
+
+
+def _context(text: str, start: int, end: int) -> tuple[str, int, int]:
+    """Cite the local clause; only label unambiguous literal closing statements."""
+    lower = max(0, start - 240)
+    preceding = text[lower:start]
+    breaks = list(CLAUSE_BREAK.finditer(preceding))
+    begin = lower + breaks[-1].end() if breaks else lower
+    while begin < start and text[begin].isspace():
+        begin += 1
+    following = text[end : end + 240]
+    ending = CLAUSE_BREAK.search(following)
+    finish = end + ending.end() if ending else min(len(text), end + 240)
+    context = text[begin:finish]
+    complete_prefix = lower == 0 or bool(breaks)
+    complete_suffix = ending is not None or end + 240 >= len(text)
+    claim = (
+        complete_prefix
+        and complete_suffix
+        and CLAIM_VERB.search(text[begin:start]) is not None
+        and not UNCERTAIN.search(context)
+        and "?" not in context
+        and not any(quote in context for quote in ('"', "'", "`", "“", "”", "‘", "’"))
+    )
+    return "claims_fixes" if claim else "references", begin, finish
 
 
 def related(snapshot: Snapshot, item: str, *, limit: int = 20) -> dict[str, Any]:
@@ -38,13 +72,9 @@ def related(snapshot: Snapshot, item: str, *, limit: int = 20) -> dict[str, Any]
                 continue
             if same_repository and target == record.item:
                 continue
-            preceding = record.text[max(0, start - 25) : start].lower()
-            predicate = (
-                "claims_fixes"
-                if re.search(r"(?:close[sd]?|fix(?:e[sd])?|resolve[sd]?)\s*$", preceding)
-                else "references"
-            )
+            predicate, context_start, context_end = _context(record.text, start, end)
             literal = record.text[start:end]
+            context = record.text[context_start:context_end]
             edges.append(
                 {
                     "source_item": record.item,
@@ -53,15 +83,23 @@ def related(snapshot: Snapshot, item: str, *, limit: int = 20) -> dict[str, Any]
                     "target_present": same_repository and target in known,
                     "predicate": predicate,
                     "equivalence_established": False,
+                    "reference": {
+                        "text": literal,
+                        "source_start": record.source_start + start,
+                        "source_end": record.source_start + end,
+                        "sha256": sha256(literal),
+                    },
                     "evidence": {
                         "record_id": record.id,
                         "uri": record.uri,
                         "source_revision": record.source_revision,
-                        "source_start": record.source_start + start,
-                        "source_end": record.source_start + end,
+                        "record_start": context_start,
+                        "record_end": context_end,
+                        "source_start": record.source_start + context_start,
+                        "source_end": record.source_start + context_end,
                         "offset_unit": "unicode-codepoints",
-                        "text": literal,
-                        "sha256": sha256(literal),
+                        "text": context,
+                        "sha256": sha256(context),
                     },
                 }
             )

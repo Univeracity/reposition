@@ -284,8 +284,121 @@ class EvidenceTests(unittest.TestCase):
             evidence = render(index.search("integrity"))
             self.assertEqual(evidence.excerpts[0]["text"], "")
 
+    def test_tight_budget_retains_the_match_and_source_offsets(self):
+        for query in ("needle", "id", "résumé", '"remote object"'):
+            match = query.strip('"')
+            with self.subTest(query=query), Index() as index:
+                source = record(
+                    title="Archive",
+                    text="🙂 " * 1000 + match + " tail" * 1000,
+                    source_start=42,
+                )
+                index.import_snapshot(Snapshot("test/repo", (source,)))
+                evidence = render(index.search(query), budget=600)
+                self.assertEqual(len(evidence.excerpts), 1)
+                excerpt = evidence.excerpts[0]
+                self.assertIn(match, excerpt["text"])
+                self.assertEqual(
+                    source.text[excerpt["record_start"] : excerpt["record_end"]], excerpt["text"]
+                )
+                self.assertEqual(excerpt["source_start"], 42 + excerpt["record_start"])
+                self.assertEqual(excerpt["source_end"], 42 + excerpt["record_end"])
+                self.assertEqual(excerpt["sha256"], sha256(excerpt["text"]))
+                self.assertEqual(evidence.count, len(evidence.text))
+                self.assertLessEqual(evidence.count, 600)
+
+    def test_excerpt_smaller_than_the_match_omits_the_hit(self):
+        evidence = render(self.result, excerpt_chars=3)
+        self.assertFalse(evidence.excerpts)
+        self.assertEqual(evidence.omitted_hits, len(self.result.hits))
+
+    def test_unrenderable_citation_does_not_block_later_hits(self):
+        with Index() as index:
+            sources = (
+                replace(record("a", "1", text="needle"), uri="https://example.com/" + "x" * 3000),
+                record("b", "2", text="needle"),
+            )
+            index.import_snapshot(Snapshot("test/repo", sources))
+            result = index.search("needle")
+            result = replace(result, hits=tuple(sorted(result.hits, key=lambda h: h.record.id)))
+            evidence = render(result, budget=1000)
+            self.assertEqual([e["record_id"] for e in evidence.excerpts], ["b"])
+            self.assertEqual(evidence.omitted_hits, 1)
+            self.assertIn("needle", evidence.excerpts[0]["text"])
+
 
 class RelationTests(unittest.TestCase):
+    def test_fix_claim_context_and_literal_reference_are_source_bound(self):
+        body = "🙂 intro. This fixes other/repo#2. Another sentence."
+        source = record(text=body, source_start=42)
+        with Index() as index:
+            index.import_snapshot(Snapshot("test/repo", (source,)))
+            edge = index.related("1")["edges"][0]
+        self.assertEqual(edge["predicate"], "claims_fixes")
+        self.assertEqual(edge["evidence"]["text"], "This fixes other/repo#2.")
+        self.assertEqual(edge["reference"]["text"], "other/repo#2")
+        evidence = edge["evidence"]
+        self.assertEqual(body[evidence["record_start"] : evidence["record_end"]], evidence["text"])
+        for part in (edge["evidence"], edge["reference"]):
+            self.assertEqual(
+                body[part["source_start"] - 42 : part["source_end"] - 42], part["text"]
+            )
+            self.assertEqual(part["sha256"], sha256(part["text"]))
+
+    def test_negated_conditional_quoted_and_questioned_fixes_remain_references(self):
+        bodies = (
+            "This does not fix #2",
+            "We should not close #2",
+            "This doesn't resolve #2",
+            "This never fixed #2",
+            "This failed to close #2",
+            "If this fixes #2, merge it",
+            "This might fix #2",
+            "Does this fix #2?",
+            'The phrase "fixes #2" is an example',
+            "Use `fixes #2` in the description",
+            "This does not, in v1.2, fix #2",
+            "This prefixes #2",
+            "No, this does not\nfix #2",
+        )
+        for body in bodies:
+            with self.subTest(body=body), Index() as index:
+                index.import_snapshot(Snapshot("test/repo", (record(text=body),)))
+                edge = index.related("1")["edges"][0]
+                self.assertEqual(edge["predicate"], "references")
+                self.assertFalse(edge["equivalence_established"])
+                self.assertEqual(edge["evidence"]["text"], body)
+                self.assertEqual(edge["reference"]["text"], "#2")
+
+    def test_explicit_closing_statements_are_still_claims(self):
+        for verb in (
+            "Fix",
+            "Fixes",
+            "Fixed",
+            "Close",
+            "Closes",
+            "Closed",
+            "Resolve",
+            "Resolves",
+            "Resolved",
+        ):
+            with self.subTest(verb=verb), Index() as index:
+                index.import_snapshot(Snapshot("test/repo", (record(text=f"{verb} #2"),)))
+                edge = index.related("1")["edges"][0]
+                self.assertEqual(edge["predicate"], "claims_fixes")
+                self.assertEqual(edge["evidence"]["text"], f"{verb} #2")
+
+    def test_incomplete_context_does_not_establish_a_fix_claim(self):
+        for body in (
+            "This does not " + "change the surrounding details " * 20 + "fix #2",
+            "Fixes #2 " + "subject to further review " * 20,
+        ):
+            with self.subTest(body=body), Index() as index:
+                index.import_snapshot(Snapshot("test/repo", (record(text=body),)))
+                edge = index.related("1")["edges"][0]
+                self.assertEqual(edge["predicate"], "references")
+                self.assertEqual(edge["reference"]["text"], "#2")
+
     def test_incoming_external_missing_and_code_references(self):
         snapshot = Snapshot(
             "test/repo",

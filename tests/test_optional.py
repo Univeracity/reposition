@@ -27,6 +27,27 @@ def snapshot(text="archive checksum integrity", title="Archive"):
 
 @unittest.skipUnless(importlib.util.find_spec("tiktoken"), "tokens extra not installed")
 class TokenTests(unittest.TestCase):
+    def test_shrinking_token_window_preserves_the_matching_passage(self):
+        import tiktoken
+
+        text = "🙂 " * 1000 + "needle" + " 🙂" * 1000
+        with Index() as index:
+            index.import_snapshot(snapshot(text))
+            result = index.search("needle")
+            minimum = render(result, unit="tokens", excerpt_chars=6)
+            evidence = render(result, unit="tokens", budget=minimum.count + 20)
+            self.assertEqual(len(evidence.excerpts), 1)
+            excerpt = evidence.excerpts[0]
+            self.assertIn("needle", excerpt["text"])
+            self.assertEqual(text[excerpt["record_start"] : excerpt["record_end"]], excerpt["text"])
+            self.assertEqual(
+                evidence.count,
+                len(
+                    tiktoken.get_encoding("o200k_base").encode(evidence.text, disallowed_special=())
+                ),
+            )
+            self.assertLessEqual(evidence.count, evidence.budget)
+
     def test_complete_output_token_count_and_special_text(self):
         import tiktoken
 

@@ -33,6 +33,10 @@ they are not bundled into the tool. `scripts/verify_extraction.py --help` descri
 the external-input replay. `benchmarks/evaluate.py` runs the portable comparison
 on a caller's native records or GitHub cache and supplied relevance labels.
 The shipped example cases are synthetic demonstrations, not benchmark evidence.
+The portable benchmark now also renders each result at a fixed character or
+token budget and reports known-positive citation recall, retention of retrieved
+positives, and hard-negative citations. Its retained excerpts can be reviewed for
+evidence sufficiency; those citation metrics do not measure sufficiency themselves.
 
 The most valuable next evaluation is independently reviewed examples from real
 maintainers, including true duplicates, competing fixes, similar symptoms with
