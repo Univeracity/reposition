@@ -1,0 +1,14 @@
+Reposition
+Copyright 2026 Jeremy Dixon
+
+The query policy in src/reposition/query.py is adapted from Vyral's Python
+lexical retrieval implementation, pinned at:
+https://github.com/Univeracity/vyral/commit/77c03edbf59a360fbe2168200bdc2153c7958fed
+Original: runtimes/python/src/vyral_runtime/local/lexical.py
+Copyright 2026 Jeremy Dixon; Apache License 2.0.
+The full license is retained in licenses/Vyral-Apache-2.0.txt.
+Modifications are described in the adapted file.
+
+Other Reposition code is covered by the project's MIT license. Reposition
+does not depend on the Vyral runtime and contains no code from the unrelated
+GitHub-to-Notion tool of the same name or from GitBit.

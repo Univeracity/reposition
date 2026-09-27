@@ -1,0 +1,8 @@
+{
+  "label_authority": "synthetic demonstrations; not an independent evaluation set",
+  "cases": [
+    {"id": "archive-integrity", "query": "same filename older bytes index digest", "relevance": {"40": 3, "41": 3}, "hard_negatives": ["60"]},
+    {"id": "advisory-transport", "query": "vulnerability advisory metadata package version", "relevance": {"50": 3, "51": 1}},
+    {"id": "absent", "query": "quasarzzzz ultramissingzzzz", "relevance": {}}
+  ]
+}

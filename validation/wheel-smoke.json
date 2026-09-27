@@ -1,0 +1,11 @@
+{
+  "wheel": "reposition-0.1.0.dev0-py3-none-any.whl",
+  "wheel_sha256": "241b7ed2a26fa145711ed99783eb31e6c6e522c1dc7e7b84a63c0bd81f8a8369",
+  "dependency_free": true,
+  "installed_module_outside_checkout": true,
+  "cli_import_search_relations_export": true,
+  "missing_extras_actionable": true,
+  "core_tests_passed": true,
+  "optional_tests_skipped": 4,
+  "passed": true
+}

@@ -1,0 +1,22 @@
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+.ruff_cache/
+.pytest_cache/
+build/
+dist/
+*.sqlite
+*.sqlite-*
+*.db
+*.db-*
+.reposition/
+.develish/
+docs/dev_coordination/
+validation/local/
+.env
+.env.*
+
+# Local agent run artifacts
+.agent-artifacts/
+.agent-state/

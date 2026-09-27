@@ -1,0 +1,41 @@
+[build-system]
+requires = ["setuptools>=77.0.3"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "reposition"
+version = "0.1.0.dev0"
+description = "Put repository work in context with local search and traceable evidence"
+readme = "README.md"
+requires-python = ">=3.10"
+license = "MIT AND Apache-2.0"
+license-files = ["LICENSE", "NOTICE", "licenses/*.txt"]
+authors = [{name = "Jeremy Dixon"}]
+dependencies = []
+classifiers = [
+  "Development Status :: 3 - Alpha",
+  "Programming Language :: Python :: 3",
+  "Topic :: Software Development",
+]
+
+[project.optional-dependencies]
+tokens = ["tiktoken>=0.7,<1"]
+tfidf = ["scikit-learn>=1.5,<2", "scipy>=1.10,<2"]
+dev = ["build>=1,<2", "ruff>=0.9,<1"]
+
+[project.scripts]
+reposition = "reposition.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+reposition = ["py.typed"]
+
+[tool.ruff]
+target-version = "py310"
+line-length = 100
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B"]
+ignore = ["E501"]

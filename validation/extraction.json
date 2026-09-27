@@ -1,0 +1,75 @@
+{
+  "schema": "reposition.extraction.v1",
+  "checked_at": "2026-09-27T05:58:33.750742+00:00",
+  "environment": {
+    "python": "3.12.3",
+    "sqlite": "3.45.1",
+    "tiktoken": "0.14.0",
+    "scikit-learn": "1.9.1",
+    "scipy": "1.18.1"
+  },
+  "implementation_digests": {
+    "src/reposition/__init__.py": "b1709e0b5121e97b41fdaa927172274144b5e10c5a50a1c409fb33687bf476ec",
+    "src/reposition/__main__.py": "935a1c1166b0c1ea35a82256345000bf2c73ded718d77773bc27a71ecce28f7d",
+    "src/reposition/cli.py": "82adaa6ee09aedc85a23e48791e16d38bfd0db6c7f9daca9ea0fa2fbab43e2b0",
+    "src/reposition/importers.py": "2689524c4578b845fdf5d2a5a6951f1a167649df42884fd3a7079241151ec50c",
+    "src/reposition/index.py": "7509d0349d2f2a5b8f3d25cabd2d4865836d1b609a63876317ccdab5bdd44e21",
+    "src/reposition/models.py": "d9647f2a4bdffeccbc86a28cfe4eb3d2737165f41d967397738fd315bb92bc85",
+    "src/reposition/query.py": "ebaa44b9e6adf8809b3df9c1835a55e5174da59f32ed4bba04ed9d2f454893a6",
+    "src/reposition/relations.py": "8f7bb21a478f615aaaf9821935ecce722f3c479f5dd5f59081d4c703db41298e",
+    "src/reposition/render.py": "6644b7c4127984fe6a6aabd063143293acf536b37a9776f0cd40fbe7de58ff29",
+    "src/reposition/tfidf.py": "c2588319363f41a71021674ad5c1425f02b8e5b3966303289350e40c3ae5a843"
+  },
+  "repositories": {
+    "omarchy": {
+      "records": 434,
+      "snapshot_digest": "f01ccc85030f67554cf1b85c44a061586947ff822bdb0ec7f6dbf3f678973346",
+      "input_digests": {
+        "documents.json": "bba556124e889b3a00b8d0d66be14af70c50855c57cee1eb98bb0194d315ea9d",
+        "manifest.json": "1d2bea9d31b8f329416d5c0a79513174370bba05207f93718834cdb8bf4fbecf",
+        "cases.json": "0ce8f597b1a1c8ffc9b63ad0f918c5d95bcb514ee27cae91c99e80eac739e7e8",
+        "results.json": "151742ebb85d045573435004f168e5eab36cc23e2f6ecf04529d2d0f32ef57e2"
+      },
+      "methods": {
+        "fts5": {
+          "ranking_parity_queries": 80,
+          "complete_outputs": 160,
+          "excerpt_checks": 651,
+          "passed": true
+        },
+        "tfidf": {
+          "ranking_parity_queries": 80,
+          "complete_outputs": 160,
+          "excerpt_checks": 660,
+          "passed": true
+        }
+      }
+    },
+    "omarchy-pkgs": {
+      "records": 592,
+      "snapshot_digest": "76035e897895050707bf90d278cb21d1a5842891531e1f85ba577017d875ee45",
+      "input_digests": {
+        "documents.json": "ead9e9e6c78467dfc3a57a13815935ae7366feb11c15bfd490d879e9b90d8e26",
+        "manifest.json": "29b8eebd2d8c5e731cf040b45afd8fa59f9fe4ce2acc51cd08eb808ffd001fcb",
+        "cases.json": "024da99e140688142d3318af34c602eae797356f4f30001a32aa9b6bf22e0c6c",
+        "results.json": "b725529bf9a85d873aeacbce7f1268e3151d4a2b1f0f8bfbeb893a8d57237483"
+      },
+      "methods": {
+        "fts5": {
+          "ranking_parity_queries": 85,
+          "complete_outputs": 170,
+          "excerpt_checks": 691,
+          "passed": true
+        },
+        "tfidf": {
+          "ranking_parity_queries": 85,
+          "complete_outputs": 170,
+          "excerpt_checks": 706,
+          "passed": true
+        }
+      }
+    }
+  },
+  "limits": "saved provisional labels; search parity only, not new human qualification; new general renderer audited independently",
+  "passed": true
+}
