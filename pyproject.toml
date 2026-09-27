@@ -18,6 +18,10 @@ classifiers = [
   "Topic :: Software Development",
 ]
 
+[project.urls]
+Repository = "https://github.com/Univeracity/reposition"
+Issues = "https://github.com/Univeracity/reposition/issues"
+
 [project.optional-dependencies]
 tokens = ["tiktoken>=0.7,<1"]
 tfidf = ["scikit-learn>=1.5,<2", "scipy>=1.10,<2"]

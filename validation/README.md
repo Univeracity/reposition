@@ -18,6 +18,7 @@ Locally checked on Python 3.12.3:
 digests. [Wheel smoke receipt](wheel-smoke.json) confirms installation, CLI
 behavior and actionable optional-dependency errors outside the checkout.
 
-These are local checks. The checked-in GitHub Actions workflow targets Python
-3.10, 3.12 and 3.14; it has not yet run on a remote. Historical labels remain
-provisional; extraction parity is not a new human evaluation of review quality.
+These are local checks. The GitHub Actions workflow targets Python 3.10, 3.12
+and 3.14; see [CI runs](https://github.com/Univeracity/reposition/actions/workflows/ci.yml)
+for remote results. Historical labels remain provisional; extraction parity is
+not a new human evaluation of review quality.

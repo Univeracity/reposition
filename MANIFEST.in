@@ -1,6 +1,7 @@
 include README.md LICENSE NOTICE AGENTS.md
 recursive-include licenses *.txt
 recursive-include docs *.md
+recursive-include docs/brand *.png *.svg
 recursive-include examples *.json
 recursive-include tests *.py
 recursive-include scripts *.py

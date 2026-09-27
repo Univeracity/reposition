@@ -12,3 +12,10 @@ Modifications are described in the adapted file.
 Other Reposition code is covered by the project's MIT license. Reposition
 does not depend on the Vyral runtime and contains no code from the unrelated
 GitHub-to-Notion tool of the same name or from GitBit.
+
+Supporting text in the README header and social preview graphics uses DejaVu
+Sans glyph outlines. Copyright (c) 2003 Bitstream, Inc. All Rights Reserved.
+Bitstream Vera is a trademark of Bitstream, Inc. DejaVu changes are in the
+public domain. The permission notice is retained in
+licenses/DejaVu-Bitstream-Vera.txt. The Reposition wordmark and logo are
+original brand artwork; they do not use DejaVu glyphs.

@@ -13,7 +13,6 @@ cached TF-IDF comparison.
 4. Add source acquisition or incremental refresh only when the calling workflows
    need them, preserving coverage and explicit snapshot boundaries.
 
-Vyral can provide optional retrieval/data capabilities. Limitless Library can
-preserve validated reusable methods from review work. Neither is a dependency of
-the initial tool. A broader repository pipeline product should grow from these
-measured workflows rather than precede them.
+Optional retrieval backends and review-workflow integrations should be evaluated
+against the default on these measured workflows. A broader repository pipeline
+product should grow from demonstrated needs.

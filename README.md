@@ -1,5 +1,7 @@
 # Reposition
 
+![Reposition — Put repository work in context.](docs/brand/reposition-readme-header.png)
+
 **Put repository work in context.**
 
 Reposition searches saved issues, pull requests, comments, and changed files,
@@ -15,6 +17,8 @@ Nothing is posted to GitHub, and nothing from a cache is executed.
 Python 3.10+ with SQLite FTS5 support is required. From a checkout:
 
 ```sh
+git clone https://github.com/Univeracity/reposition.git
+cd reposition
 python3 -m venv .venv
 source .venv/bin/activate
 python -m pip install -e .
