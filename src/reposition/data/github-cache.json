@@ -1,0 +1,48 @@
+{
+  "coverage": {
+    "items": "synthetic bounded sample",
+    "comments": "included sample only",
+    "files": "included patches only",
+    "reviews": "not acquired",
+    "checks": "not acquired"
+  },
+  "items": [
+    {
+      "number": 40,
+      "title": "Mirror download has an unexpected checksum",
+      "body": "The repository index advertises a new digest, but an existing archive with the same filename still contains the older bytes. Rebuilding the index did not replace that remote object.",
+      "url": "https://github.com/example/packages/issues/40",
+      "comments": [
+        {"id": "c1", "body": "The destination name is unchanged. Compare the stored object's SHA-256 before adding it to the package index."}
+      ]
+    },
+    {
+      "number": 41,
+      "title": "Verify existing archive bytes before index publication",
+      "body": "Fixes #40. Refuse to publish a package index when an already-present filename has bytes that differ from the incoming archive. This does not automatically repair old objects.",
+      "url": "https://github.com/example/packages/pull/41",
+      "headRefOid": "1111111111111111111111111111111111111111",
+      "files": [
+        {"path": "helpers/publish.sh", "patch": "@@ -1 +1,2 @@\n publish_index\n+verify_existing_archive_digest"}
+      ]
+    },
+    {
+      "number": 50,
+      "title": "Version-bound advisory metadata",
+      "body": "Publish vulnerability findings beside each package version so a new advisory can be distributed without rebuilding the application. Missing metadata means unknown, not clean.",
+      "url": "https://github.com/example/packages/issues/50"
+    },
+    {
+      "number": 51,
+      "title": "Move package builds to disposable CI workers",
+      "body": "Build contributions in temporary workers and publish artifacts after merge. Revisit the transport proposal in #50 against the new publishing path.",
+      "url": "https://github.com/example/packages/pull/51"
+    },
+    {
+      "number": 60,
+      "title": "Download fails when the mirror connection times out",
+      "body": "A slow network connection interrupted the transfer. This report does not establish that the stored archive bytes are wrong.",
+      "url": "https://github.com/example/packages/issues/60"
+    }
+  ]
+}

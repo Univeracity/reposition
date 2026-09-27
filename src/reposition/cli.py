@@ -21,6 +21,11 @@ def parser() -> argparse.ArgumentParser:
     root = argparse.ArgumentParser(prog="reposition", description="Put repository work in context.")
     root.add_argument("--version", action="version", version=f"Reposition {__version__}")
     commands = root.add_subparsers(dest="command", required=True)
+    demo = commands.add_parser("demo", help="try synthetic search without setup or saved files")
+    demo.add_argument("query", nargs="?", help="optional search text for the demo")
+    demo.add_argument(
+        "--cache", action="store_true", help="demo immutable-cache indexing, search and retrieval"
+    )
     index = commands.add_parser("index", help="index an offline JSON snapshot")
     index.add_argument("input", type=Path)
     index.add_argument("--format", choices=("records", "github", "components"), default="records")
@@ -145,6 +150,8 @@ def parser() -> argparse.ArgumentParser:
             help="ceiling on unique source-object bytes verified per response",
         )
     for name, command in commands.choices.items():
+        if name == "demo":
+            continue
         command.add_argument(
             "--db",
             type=Path,
@@ -157,6 +164,11 @@ def parser() -> argparse.ArgumentParser:
 def main(argv: list[str] | None = None) -> int:
     args = parser().parse_args(argv)
     try:
+        if args.command == "demo":
+            from .demo import run_demo
+
+            sys.stdout.write(run_demo(args.query, immutable_cache=args.cache))
+            return 0
         if args.command.startswith("cache-"):
             source = TriageCache(args.cache, max_object_bytes=args.max_object_bytes)
             path = args.db or source.index_path(snapshot=args.snapshot, corpus=args.corpus)

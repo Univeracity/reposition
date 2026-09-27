@@ -10,6 +10,10 @@ between those commits. The same patch applies to both without modification.
 Existing commands work without Reposition. The patch does not alter acquisition,
 TUI notifications, ledger decisions or GitHub actions.
 
+To try the complete synthetic retrieval workflow before modifying triage-o-mator,
+run `./reposition demo --cache` from a Reposition checkout. It needs no installation
+and handles the fixture, IDs and source-verification steps automatically.
+
 Install the supplied `reposition-0.2.0.dev0-*.whl` in the Python environment used
 by `bin/cache`, or install the corresponding Reposition checkout with
 `python -m pip install -e /path/to/reposition`. Use the supplied build: the
@@ -28,10 +32,9 @@ From the selected triage install:
 bin/cache --expected-repo OWNER/REPO search-index --snapshot INVENTORY_SNAPSHOT --component summary
 bin/cache --expected-repo OWNER/REPO search-index --corpus CORPUS_ID
 bin/cache --expected-repo OWNER/REPO query --corpus CORPUS_ID \
-  --query 'terminal fails after suspend' --component summary --component comments \
-  --limit 10 --max-snippets-per-item 2 --max-bytes 12000
+  --query 'terminal fails after suspend'
 bin/cache --expected-repo OWNER/REPO retrieve --corpus CORPUS_ID \
-  --unit UNIT_ID --checkpoint INDEX_CHECKPOINT --fragment-bytes 4096 --max-bytes 12000
+  --unit UNIT_ID --checkpoint INDEX_CHECKPOINT
 bin/cache search-info --corpus CORPUS_ID
 ```
 

@@ -47,6 +47,12 @@ def smoke(wheel: Path) -> dict:
             )
         shutil.copyfile(root / "examples/github-cache.json", temporary / "cache.json")
         run("-m", "reposition", "--version")
+        demo, _ = run("-m", "reposition", "demo")
+        if "https://github.com/example/packages/issues/40" not in demo:
+            raise RuntimeError("wheel demo has no bundled sample results")
+        cache_demo, _ = run("-m", "reposition", "demo", "--cache")
+        if "Verified source" not in cache_demo or "larger source window" not in cache_demo:
+            raise RuntimeError("wheel immutable-cache demo failed")
         indexed, _ = run(
             "-m",
             "reposition",
@@ -119,6 +125,7 @@ def smoke(wheel: Path) -> dict:
         "wheel_sha256": hashlib.sha256(wheel.read_bytes()).hexdigest(),
         "dependency_free": True,
         "installed_module_outside_checkout": True,
+        "cli_self_contained_demos": True,
         "cli_import_search_relations_export": True,
         "cli_immutable_cache_index_query_retrieve": True,
         "missing_extras_actionable": True,

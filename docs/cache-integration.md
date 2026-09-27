@@ -8,7 +8,23 @@ the caller. These commands are separate from the normalized `index/search` API.
 
 ## Try the complete workflow
 
-Install this checkout with `python -m pip install -e .`. Generate synthetic data:
+From a Reposition checkout:
+
+```sh
+./reposition demo --cache
+```
+
+This creates a temporary synthetic cache, builds its index, searches all nine
+components and retrieves a larger verified fragment from the first result.
+The demo carries IDs and checkpoints between stages automatically and removes
+its cache and index when finished. No installation is needed. An installed
+package offers the same workflow as `reposition demo --cache`.
+
+## Run the individual stages
+
+Use these commands when you want to keep a fixture and inspect the JSON API.
+[Install this checkout](usage.md#install-the-command-or-python-api), then generate
+synthetic data:
 
 ```sh
 python examples/triage_cache.py /tmp/reposition-demo-cache
@@ -19,13 +35,12 @@ Use the returned snapshot and corpus IDs in these commands:
 ```sh
 reposition cache-index --cache /tmp/reposition-demo-cache --snapshot SNAPSHOT_ID
 reposition cache-query --cache /tmp/reposition-demo-cache --snapshot SNAPSHOT_ID \
-  --query 'terminal suspend' --component summary --component comments \
-  --limit 10 --max-snippets-per-item 2 --max-bytes 12000 > discovery.json
+  --query 'terminal suspend' > discovery.json
 reposition cache-index --cache /tmp/reposition-demo-cache --corpus CORPUS_ID
 reposition cache-query --cache /tmp/reposition-demo-cache --corpus CORPUS_ID \
   --query 'src/terminal.py' --component files --field path --kind pr
 reposition cache-retrieve --cache /tmp/reposition-demo-cache --snapshot SNAPSHOT_ID \
-  --unit UNIT_ID --checkpoint INDEX_CHECKPOINT --fragment-bytes 4096 --max-bytes 12000
+  --unit UNIT_ID --checkpoint INDEX_CHECKPOINT
 ```
 
 `UNIT_ID` comes from `items[].fragments[].unit_id`; `INDEX_CHECKPOINT` is the
