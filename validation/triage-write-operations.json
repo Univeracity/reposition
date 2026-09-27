@@ -1,0 +1,77 @@
+{
+  "schema": "reposition.triage-validation.v1",
+  "checked_at": "2026-09-27",
+  "implementation_commit": "1990a9ba30ffe52c01b9adafeb23620a518c4c21",
+  "upstream_repository": "https://github.com/EFrMG/triage-o-mator",
+  "upstream_branch_at_review": "write-operations",
+  "upstream_commit": "f956c1299ab7f28107aa4db7943d97ce0baa4f2a",
+  "original_integration_pin": "dddc487660ffda17ba7e3626c9d9be72e29a6dce",
+  "source_comparison": [
+    {
+      "path": "docs/evidence-reference.md",
+      "original_blob": "7a604a8280fe0f542be219d00128e4812ffbd61b",
+      "reviewed_blob": "7a604a8280fe0f542be219d00128e4812ffbd61b",
+      "unchanged": true
+    },
+    {
+      "path": "bin/_evidence.py",
+      "original_blob": "9756ad847db9f9e63e5a927a89daa8048ee16890",
+      "reviewed_blob": "9756ad847db9f9e63e5a927a89daa8048ee16890",
+      "unchanged": true
+    },
+    {
+      "path": "bin/_cache.py",
+      "original_blob": "d1fba4528c6bc3c0b7864e59e13eb409f671e947",
+      "reviewed_blob": "d1fba4528c6bc3c0b7864e59e13eb409f671e947",
+      "unchanged": true
+    },
+    {
+      "path": "bin/_corpus.py",
+      "original_blob": "0a9addc5a4fd0f5ad67fa9be38b6c39ffcae3b30",
+      "reviewed_blob": "0a9addc5a4fd0f5ad67fa9be38b6c39ffcae3b30",
+      "unchanged": true
+    },
+    {
+      "path": "bin/_chunks.py",
+      "original_blob": "8763493d012eecdde91fa2f926f1b18f93ffb846",
+      "reviewed_blob": "8763493d012eecdde91fa2f926f1b18f93ffb846",
+      "unchanged": true
+    },
+    {
+      "path": "bin/_jobs.py",
+      "original_blob": "aa036afe8799e81ee5c996290631338e13f2b1a4",
+      "reviewed_blob": "aa036afe8799e81ee5c996290631338e13f2b1a4",
+      "unchanged": true
+    },
+    {
+      "path": "bin/_install.py",
+      "original_blob": "e81a686cac4b40f0a0a07b8e6b5bac97c3652b23",
+      "reviewed_blob": "e81a686cac4b40f0a0a07b8e6b5bac97c3652b23",
+      "unchanged": true
+    },
+    {
+      "path": "bin/_triage.py",
+      "original_blob": "6103556b838c29e33f4273829ad43703d6030e33",
+      "reviewed_blob": "6103556b838c29e33f4273829ad43703d6030e33",
+      "unchanged": true
+    }
+  ],
+  "patch_applies_to_reviewed_commit": true,
+  "patch_sha256": "c91d297d6ea113ee7f19c1b0f265c08aa2f6446817dc40b741ff8aedf48dbdc0",
+  "compatibility": {
+    "schema": "reposition.triage-compatibility.v1",
+    "passed": true,
+    "upstream_published_objects_and_corpus": true,
+    "legacy_search_without_reposition": true,
+    "missing_optional_package_actionable": true,
+    "install_identity_and_cache_override_guards": true,
+    "query_and_retrieve_verified": true,
+    "complete_response_max_bytes": 6000,
+    "actual_query_bytes": 4841,
+    "source_cache_bytes_unchanged": true,
+    "index_units": 70,
+    "index_bytes": 159744,
+    "requests": 0
+  },
+  "qualification": "Synthetic offline compatibility at the pinned commit; not real-cache performance or duplicate-decision qualification."
+}

@@ -1,8 +1,12 @@
 # Optional triage-o-mator integration
 
 This proposed patch adds four offline commands to triage-o-mator's `bin/cache`.
-It targets commit `dddc487660ffda17ba7e3626c9d9be72e29a6dce` of
-[EFrMG/triage-o-mator](https://github.com/EFrMG/triage-o-mator/tree/dddc487660ffda17ba7e3626c9d9be72e29a6dce).
+For a trial on triage-o-mator's `write-operations` branch, use validated commit
+[`f956c1299ab7f28107aa4db7943d97ce0baa4f2a`](https://github.com/EFrMG/triage-o-mator/tree/f956c1299ab7f28107aa4db7943d97ce0baa4f2a).
+The patch also supports its original base,
+[`dddc487660ffda17ba7e3626c9d9be72e29a6dce`](https://github.com/EFrMG/triage-o-mator/tree/dddc487660ffda17ba7e3626c9d9be72e29a6dce).
+The evidence reference and seven core cache/install modules are unchanged
+between those commits. The same patch applies to both without modification.
 Existing commands work without Reposition. The patch does not alter acquisition,
 TUI notifications, ledger decisions or GitHub actions.
 
@@ -55,5 +59,9 @@ publication. It checks legacy search without Reposition, missing-package behavio
 identity guards, verified query/retrieve and unchanged authoritative cache bytes.
 It makes no acquisition requests. Do not run it against untrusted executable
 checkout code. Real-cache size/latency and review decisions require separate trials.
+
+The [validation receipt](../../validation/triage-write-operations.json) records
+the checked upstream commit, patch SHA-256 and successful compatibility results.
+It covers the pinned commit; later branch changes require another check.
 
 See the [complete retrieval contract](../../docs/cache-integration.md).
