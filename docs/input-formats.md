@@ -59,3 +59,13 @@ The adapter needs no original runtime or harness code.
 
 Unsupported cache formats should be translated into native records by a small
 caller-owned adapter. Keep item, component, revision and coverage explicit.
+
+## Immutable triage-o-mator evidence cache
+
+Use the separate `cache-index/query/retrieve/info` commands for the version-1
+content-addressed cache containing `cache.json`, `snapshots/`, `objects/` and
+`corpora/`. No flattening or install-script execution is required. The reader
+validates source contracts and checksums, exact repository identity, selected
+snapshot/corpus membership, progress and returned source fragments. Its UTF-8
+byte offsets and complete JSON budget differ from normalized code-point/text
+budgets. See [immutable-cache retrieval](cache-integration.md).

@@ -1,4 +1,7 @@
-# Initial contracts
+# Retrieval contracts
+
+This page describes the normalized `Index` API. The separate immutable-cache
+API has [source verification, scope and whole-response byte contracts](cache-integration.md).
 
 The useful default is local repository evidence search. Keep acquisition,
 retrieval, evidence rendering, and review decisions separate so a cache/TUI/agent
@@ -39,8 +42,10 @@ an excerpt heuristic, not a reproduction of SQLite's tokenizer or a guarantee
 of evidence sufficiency.
 
 Literal relationship navigation is one hop, restricted to discussion components.
-Qualified external references retain their repository identity. File patches are
-excluded to avoid interpreting code hashtags as discussion links. “Claims fixes”
+Qualified external references retain their repository identity. Only summaries,
+comments, reviews and inline review comments contribute these relationships;
+diffs, changed files, checks, timelines and unknown components are excluded.
+“Claims fixes”
 does not establish a fix, equivalence, or duplicate. Missing targets remain visible.
 Fix claims use conservative literal wording checks within a bounded local clause;
 negation, questions, conditional wording, quotes, and incomplete context retain

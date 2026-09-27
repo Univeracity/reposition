@@ -57,6 +57,20 @@ Leading `#40` anchors select that item's summary before lexical results. Quoted
 phrases are preserved; ordinary terms use any-term matching. Results are ranked
 evidence, not automated duplicate decisions or calibrated confidence scores.
 
+## Immutable triage caches
+
+The `cache-index`, `cache-query` and `cache-retrieve` commands work directly with
+triage-o-mator's immutable evidence cache. They provide component-aware ranked
+fragments, exact snapshot/corpus selection, source verification and progressive
+reads across all nine components. The complete JSON response has an enforceable
+UTF-8 byte budget. Derived indexes live beside the acquisition cache and have
+their own storage ceiling.
+
+See the [workflow and contracts](docs/cache-integration.md), including a synthetic
+demo, resource limits and an optional `bin/cache` integration patch. This API
+keeps acquisition and approvals with the caller; real-cache and independent
+review evaluation remain the next qualification steps.
+
 ## Optional comparisons and token budgets
 
 ```sh
@@ -117,6 +131,7 @@ independent review is still needed. The report's JSON wrapper is outside that
 evidence budget.
 
 See [design](docs/design.md) and [next steps](docs/roadmap.md). Source code is MIT
-licensed, with the adapted Vyral query policy under Apache-2.0 as described in
+licensed, with the adapted Vyral query policy under Apache-2.0 and the adapted
+triage-o-mator evidence validator under MIT as described in
 [NOTICE](NOTICE). This project is separate from the GitHub-to-Notion CLI also
 called Reposition.

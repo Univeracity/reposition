@@ -70,6 +70,38 @@ def smoke(wheel: Path) -> dict:
         if json.loads(related)["edges"][0]["source_item"] != "41":
             raise RuntimeError("wheel reference navigation failed")
         run("-m", "reposition", "export")
+        generated, _ = run(str(root / "examples/triage_cache.py"), "immutable-cache")
+        scope = json.loads(generated)
+        common = ("--cache", "immutable-cache", "--corpus", scope["corpus"])
+        run("-m", "reposition", "cache-index", *common)
+        discovery, _ = run(
+            "-m",
+            "reposition",
+            "cache-query",
+            *common,
+            "--query",
+            "café suspend",
+            "--max-bytes",
+            "6000",
+        )
+        result = json.loads(discovery)
+        if len(discovery.encode("utf-8")) > 6000 or not result["items"]:
+            raise RuntimeError("wheel immutable-cache query/budget failed")
+        fragment = result["items"][0]["fragments"][0]
+        resolved, _ = run(
+            "-m",
+            "reposition",
+            "cache-retrieve",
+            *common,
+            "--unit",
+            fragment["unit_id"],
+            "--checkpoint",
+            result["checkpoint"],
+            "--max-bytes",
+            "6000",
+        )
+        if not json.loads(resolved)["items"][0]["fragments"][0]["verified"]:
+            raise RuntimeError("wheel immutable-cache source resolution failed")
         _, error = run("-m", "reposition", "search", "archive", "--tokens", "1024", expected=2)
         if "[tokens]" not in error:
             raise RuntimeError("missing tokens extra has no actionable message")
@@ -88,6 +120,7 @@ def smoke(wheel: Path) -> dict:
         "dependency_free": True,
         "installed_module_outside_checkout": True,
         "cli_import_search_relations_export": True,
+        "cli_immutable_cache_index_query_retrieve": True,
         "missing_extras_actionable": True,
         "core_tests_passed": True,
         "optional_tests_skipped": int(skipped[1]),

@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "reposition"
-version = "0.1.0.dev0"
+version = "0.2.0.dev0"
 description = "Put repository work in context with local search and traceable evidence"
 readme = "README.md"
 requires-python = ">=3.10"

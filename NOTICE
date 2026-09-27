@@ -13,6 +13,13 @@ Other Reposition code is covered by the project's MIT license. Reposition
 does not depend on the Vyral runtime and contains no code from the unrelated
 GitHub-to-Notion tool of the same name or from GitBit.
 
+The triage-o-mator evidence format v1 validator in
+src/reposition/_triage_contract.py is adapted from bin/_evidence.py at:
+https://github.com/EFrMG/triage-o-mator/commit/dddc487660ffda17ba7e3626c9d9be72e29a6dce
+Copyright (c) 2026 EFrMG; MIT License. The permission notice is retained in
+licenses/triage-o-mator-MIT.txt. The adapter removes install-specific imports;
+it does not acquire evidence or import triage decisions.
+
 Supporting text in the README header and social preview graphics uses DejaVu
 Sans glyph outlines. Copyright (c) 2003 Bitstream, Inc. All Rights Reserved.
 Bitstream Vera is a trademark of Bitstream, Inc. DejaVu changes are in the

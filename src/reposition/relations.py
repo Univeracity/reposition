@@ -20,6 +20,7 @@ UNCERTAIN = re.compile(
     re.IGNORECASE,
 )
 CLAUSE_BREAK = re.compile(r"[!?;]|(?<!\w)\.|\.(?!\w)|\n[ \t]*\n")
+DISCUSSION_COMPONENTS = frozenset({"summary", "comments", "reviews", "review_comments"})
 
 
 def _context(text: str, start: int, end: int) -> tuple[str, int, int]:
@@ -55,7 +56,7 @@ def related(snapshot: Snapshot, item: str, *, limit: int = 20) -> dict[str, Any]
         raise ValueError(f"item #{item} is not in this snapshot")
     edges = []
     for record in sorted(snapshot.records, key=lambda r: r.id):
-        if record.component == "files":
+        if record.component not in DISCUSSION_COMPONENTS:
             continue
         references = []
         spans = []

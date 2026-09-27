@@ -21,7 +21,7 @@ def check(path):
             raise ValueError(f"local artifact in distribution: {name}")
         if "validation/local/" in name:
             raise ValueError(f"local validation artifact in distribution: {name}")
-    for required in ("LICENSE", "NOTICE", "Vyral-Apache-2.0.txt"):
+    for required in ("LICENSE", "NOTICE", "Vyral-Apache-2.0.txt", "triage-o-mator-MIT.txt"):
         if not any(name.endswith("/" + required) for name in names):
             raise ValueError(f"missing license attribution: {required}")
     print(f"{path.name}: passed ({len(names)} archive entries)")

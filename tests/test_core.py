@@ -328,6 +328,14 @@ class EvidenceTests(unittest.TestCase):
 
 
 class RelationTests(unittest.TestCase):
+    def test_only_discussion_components_produce_literal_relationships(self):
+        for component in ("files", "diff", "checks", "timeline", "closing_issues", "unknown"):
+            with self.subTest(component=component), Index() as index:
+                index.import_snapshot(
+                    Snapshot("test/repo", (record(component=component, text="+# fixes #2"),))
+                )
+                self.assertEqual(index.related("1")["edges"], [])
+
     def test_fix_claim_context_and_literal_reference_are_source_bound(self):
         body = "🙂 intro. This fixes other/repo#2. Another sentence."
         source = record(text=body, source_start=42)

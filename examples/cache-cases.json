@@ -1,0 +1,9 @@
+{
+  "label_authority": "Synthetic demonstration targets; no duplicate verdict labels",
+  "cases": [
+    {"id": "exact-title", "query": "\"example 2\"", "literal_query": "example 2", "components": ["summary"], "expected_items": ["pr:2"]},
+    {"id": "case-normalization", "query": "resume", "components": ["comments"]},
+    {"id": "path-discovery", "query": "terminal.py", "components": ["files"]},
+    {"id": "absent-marker", "query": "nonexistent_marker_87b5", "components": ["summary", "comments"]}
+  ]
+}
