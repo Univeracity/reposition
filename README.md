@@ -1,8 +1,4 @@
-# Reposition
-
 ![Reposition — Put repository work in context.](docs/brand/reposition-readme-header.png)
-
-**Put repository work in context.**
 
 Reposition searches saved issues, pull requests, comments, and changed files,
 then brings cited evidence into your next review. Find related work, inspect
