@@ -10,37 +10,40 @@ Nothing is posted to GitHub, and nothing from a cache is executed.
 
 ## Try it
 
-Python 3.10+ with SQLite FTS5 support is required. From a checkout:
+Python 3.10+ with SQLite FTS5 support is required. From a checkout, one command
+runs a complete synthetic example:
+
+```sh
+./reposition demo
+```
+
+It indexes the included sample in memory, shows cited search results and follows
+a reference to a proposed fix. No installation, credentials or downloads are
+needed, and no database is saved. To try another query:
+
+```sh
+./reposition demo 'advisory metadata'
+```
+
+For the immutable triage-cache workflow, `./reposition demo --cache` creates a
+temporary fixture, indexes it, searches it and retrieves a larger verified source
+fragment. It handles the snapshot, corpus and fragment IDs and removes its files
+when finished.
+
+Starting without a checkout? Clone it, enter it and run the demo:
 
 ```sh
 git clone https://github.com/Univeracity/reposition.git
 cd reposition
-python3 -m venv .venv
-source .venv/bin/activate
-python -m pip install -e .
-
-reposition index examples/github-cache.json --format github --repo example/packages
-reposition search 'same filename older bytes index digest'
-reposition search 'archive digest' --component comments --json
-reposition related 40
-reposition info
+./reposition demo
 ```
 
-The included data is synthetic. Use one database per repository:
+On Windows, use `py reposition demo`; elsewhere, `python3 reposition demo` also
+works. Installed packages provide the same demo as `reposition demo`.
 
-```sh
-reposition index my-cache.json --format github --repo owner/repository --db repo.sqlite
-reposition search 'migration runs an older helper' --db repo.sqlite --chars 8000
-reposition index refreshed-cache.json --format github --repo owner/repository --db repo.sqlite --replace
-reposition export --db repo.sqlite > normalized-cache.json
-```
-
-`github` input accepts a JSON array from `gh issue list --json
-number,title,body,url,updatedAt,comments` or `gh pr list` with corresponding
-fields. REST lists can also be used. PR changed-file patches must be included
-in the cache to search them. Lists are bounded snapshots, not proof of complete
-repository coverage. See [input formats](docs/input-formats.md) for the native
-record format and the earlier experiment's component-cache adapter.
+Ready for your own data? See [using Reposition](docs/usage.md) for indexing,
+installation and filters, or the [immutable-cache workflow](docs/cache-integration.md)
+for triage-o-mator snapshots and corpora.
 
 ## Evidence you can inspect
 
@@ -66,8 +69,8 @@ reads across all nine components. The complete JSON response has an enforceable
 UTF-8 byte budget. Derived indexes live beside the acquisition cache and have
 their own storage ceiling.
 
-See the [workflow and contracts](docs/cache-integration.md), including a synthetic
-demo, resource limits and an optional `bin/cache` integration patch. This API
+See the [workflow and contracts](docs/cache-integration.md), including resource
+limits and an optional `bin/cache` integration patch. This API
 keeps acquisition and approvals with the caller; real-cache and independent
 review evaluation remain the next qualification steps.
 
