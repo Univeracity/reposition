@@ -1,0 +1,86 @@
+{
+  "schema": "reposition.triage-validation.v1",
+  "checked_at": "2026-09-27",
+  "engine_version": "0.2.0.dev1",
+  "engine_commit": "10bd0641b50d514984dad6dee480f140ab86ee44",
+  "supported_evidence_cache_schema_versions": [
+    1
+  ],
+  "upstream_repository": "https://github.com/EFrMG/triage-o-mator",
+  "upstream_branch_at_review": "master",
+  "upstream_commit": "80cdcdd77d875c4fdcd96f3367f2f8a7d253e63a",
+  "validator_origin_commit": "dddc487660ffda17ba7e3626c9d9be72e29a6dce",
+  "source_comparison": [
+    {
+      "path": "bin/_evidence.py",
+      "original_blob": "9756ad847db9f9e63e5a927a89daa8048ee16890",
+      "reviewed_blob": "9756ad847db9f9e63e5a927a89daa8048ee16890",
+      "unchanged": true
+    },
+    {
+      "path": "bin/_cache.py",
+      "original_blob": "d1fba4528c6bc3c0b7864e59e13eb409f671e947",
+      "reviewed_blob": "d1fba4528c6bc3c0b7864e59e13eb409f671e947",
+      "unchanged": true
+    },
+    {
+      "path": "bin/_corpus.py",
+      "original_blob": "0a9addc5a4fd0f5ad67fa9be38b6c39ffcae3b30",
+      "reviewed_blob": "0a9addc5a4fd0f5ad67fa9be38b6c39ffcae3b30",
+      "unchanged": true
+    },
+    {
+      "path": "bin/_chunks.py",
+      "original_blob": "8763493d012eecdde91fa2f926f1b18f93ffb846",
+      "reviewed_blob": "8763493d012eecdde91fa2f926f1b18f93ffb846",
+      "unchanged": true
+    },
+    {
+      "path": "bin/_jobs.py",
+      "original_blob": "aa036afe8799e81ee5c996290631338e13f2b1a4",
+      "reviewed_blob": "aa036afe8799e81ee5c996290631338e13f2b1a4",
+      "unchanged": true
+    },
+    {
+      "path": "bin/_install.py",
+      "original_blob": "e81a686cac4b40f0a0a07b8e6b5bac97c3652b23",
+      "reviewed_blob": "e81a686cac4b40f0a0a07b8e6b5bac97c3652b23",
+      "unchanged": true
+    },
+    {
+      "path": "bin/_triage.py",
+      "original_blob": "6103556b838c29e33f4273829ad43703d6030e33",
+      "reviewed_blob": "6103556b838c29e33f4273829ad43703d6030e33",
+      "unchanged": true
+    }
+  ],
+  "patch_applies_to_reviewed_commit": true,
+  "patch_sha256": "eb2ea418ca0ba7928ae8a101edfea162e3a12714981ba5202dbc9e805d0d58b8",
+  "compatibility": {
+    "schema": "reposition.triage-compatibility.v1",
+    "passed": true,
+    "upstream_published_objects_and_corpus": true,
+    "legacy_search_without_reposition": true,
+    "missing_optional_package_actionable": true,
+    "install_identity_and_cache_override_guards": true,
+    "search_info_identity_and_scope_guards": true,
+    "search_info_is_metadata_only": true,
+    "legacy_search_before_and_after_bridge": true,
+    "query_and_retrieve_verified": true,
+    "complete_response_max_bytes": 6000,
+    "actual_query_bytes": 4841,
+    "source_cache_bytes_unchanged": true,
+    "index_units": 70,
+    "index_bytes": 159744,
+    "requests": 0
+  },
+  "validation": {
+    "reposition_unit_tests": 79,
+    "ruff_lint_and_format": "passed",
+    "upstream_python_tests_with_optional_package": 25,
+    "upstream_go_tests_vet_gopls_format_and_build": "passed",
+    "upstream_markdown_format": "passed",
+    "isolated_wheel_tests": "passed; five optional comparison skips"
+  },
+  "qualification": "Synthetic offline compatibility at the exact commit; resource measurements and authored different-cause examples are separate reports. Real-cache performance, independent duplicate judgments, reviewer time and token use remain unqualified."
+}

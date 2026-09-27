@@ -1,12 +1,15 @@
 # Optional triage-o-mator integration
 
 This proposed patch adds four offline commands to triage-o-mator's `bin/cache`.
-For a trial on triage-o-mator's `write-operations` branch, use validated commit
+The first draft PR targets current master at
+[`80cdcdd77d875c4fdcd96f3367f2f8a7d253e63a`](https://github.com/EFrMG/triage-o-mator/tree/80cdcdd77d875c4fdcd96f3367f2f8a7d253e63a).
+Earlier compatibility checks cover the `write-operations` commit
 [`f956c1299ab7f28107aa4db7943d97ce0baa4f2a`](https://github.com/EFrMG/triage-o-mator/tree/f956c1299ab7f28107aa4db7943d97ce0baa4f2a).
 The patch also supports its original base,
 [`dddc487660ffda17ba7e3626c9d9be72e29a6dce`](https://github.com/EFrMG/triage-o-mator/tree/dddc487660ffda17ba7e3626c9d9be72e29a6dce).
-The evidence reference and seven core cache/install modules are unchanged
-between those commits. The same patch applies to both without modification.
+The historical receipts cover the earlier patch; the refreshed patch and
+[current-master receipt](../../validation/triage-master.json) name the current
+integration base. Recheck later upstream changes before adoption.
 Existing commands work without Reposition. The patch does not alter acquisition,
 TUI notifications, ledger decisions or GitHub actions.
 
@@ -14,10 +17,19 @@ To try the complete synthetic retrieval workflow before modifying triage-o-mator
 run `./reposition demo --cache` from a Reposition checkout. It needs no installation
 and handles the fixture, IDs and source-verification steps automatically.
 
-Install the supplied `reposition-0.2.0.dev0-*.whl` in the Python environment used
-by `bin/cache`, or install the corresponding Reposition checkout with
-`python -m pip install -e /path/to/reposition`. Use the supplied build: the
-unrelated package with the same PyPI name is not this project.
+This bridge supports Reposition `0.2.0.dev1` and cache format version 1. Install
+the tested engine into the Python environment used by `bin/cache`:
+
+```sh
+python -m pip install --no-deps \
+  'git+https://github.com/Univeracity/reposition.git@10bd0641b50d514984dad6dee480f140ab86ee44'
+```
+
+The bridge rejects other engine versions until compatibility is checked. Use
+this source or the matching supplied wheel: the unrelated package with the same
+PyPI name is not this project. Installation may need network access; subsequent
+indexing, queries, retrieval and metadata inspection remain offline. Reposition
+has no third-party runtime dependencies.
 
 From a clean upstream checkout:
 
@@ -60,11 +72,22 @@ python /path/to/reposition/scripts/check_triage_compat.py \
 This uses a temporary synthetic install and upstream EvidenceCache/corpus
 publication. It checks legacy search without Reposition, missing-package behavior,
 identity guards, verified query/retrieve and unchanged authoritative cache bytes.
+It also checks `search-info` against foreign host/name/stable IDs, explicit scope,
+and literal search before/after bridge use. Metadata inspection does not audit
+source checkpoints or payloads; its JSON reports both verification flags false.
 It makes no acquisition requests. Do not run it against untrusted executable
 checkout code. Real-cache size/latency and review decisions require separate trials.
 
-The [validation receipt](../../validation/triage-write-operations.json) records
+The [validation receipt](../../validation/triage-master.json) records
 the checked upstream commit, patch SHA-256 and successful compatibility results.
 It covers the pinned commit; later branch changes require another check.
 
 See the [complete retrieval contract](../../docs/cache-integration.md).
+
+The patch includes two workflow tests and a separate CI job with the pinned
+optional engine; the ordinary CI job retains the no-package path. Run checks on
+both sides whenever cache/adapter behavior changes. The
+[review and cost trial](../../docs/triage-review-trial.md) contains reproducible
+same-symptom/different-cause examples, query/retrieval costs, memory and storage
+measurements, and the boundaries of synthetic validation. Real-backlog trials
+remain the next qualification step before TUI or suggestion workflows.

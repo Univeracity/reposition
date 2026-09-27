@@ -1,0 +1,294 @@
+{
+  "schema": "reposition.cache-measurement.v1",
+  "environment": {
+    "python": "3.12.3",
+    "platform": "Linux-6.8.0-139-lowlatency-x86_64-with-glibc2.39",
+    "process_id": 2031206
+  },
+  "scope": {
+    "snapshot": "953a3d27c2101afb46e5440578ff54b471191daca3508c9dbf411facdad7768b",
+    "corpus": null
+  },
+  "source_cache_bytes": 50321350,
+  "indexed_source_object_bytes": 48242959,
+  "index_bytes": 32133120,
+  "index_to_indexed_source_ratio": 0.6660685966629866,
+  "units": 20224,
+  "objects": 2568,
+  "build_seconds": 24.346503642969765,
+  "peak_process_rss_bytes": 55476224,
+  "response_max_bytes": 12000,
+  "query_reader_policy": "Fresh source reader per case for first query; reused reader for warm queries. Python startup and OS cache clearing excluded.",
+  "cases": [
+    {
+      "id": "same-terminal-symptom",
+      "query": "\"terminal blank after suspend\"",
+      "literal_query": "Terminal blank after suspend",
+      "components": [
+        "summary"
+      ],
+      "first_query_in_process_ms": 181.4150089630857,
+      "warm_ms": [
+        121.40147801255807,
+        116.869636985939,
+        113.35860600229353
+      ],
+      "warm_median_ms": 116.869636985939,
+      "literal_scan_ms": 113.35340602090582,
+      "literal_source_bytes_read": 480737,
+      "literal_matched_items": 256,
+      "returned_items": [
+        "issue:225",
+        "issue:137",
+        "pr:442",
+        "issue:217",
+        "pr:506",
+        "issue:25"
+      ],
+      "expected_items": [],
+      "known_positive_recall": null,
+      "output_bytes": 11108,
+      "diagnostics": {
+        "method": "fts5",
+        "score_is_probability": false,
+        "candidate_limit": 1000,
+        "candidates_considered": 512,
+        "candidates_truncated": false,
+        "ranked_groups": 256,
+        "fragment_mode": false,
+        "fragments_omitted_per_item": 256,
+        "offset": 0,
+        "returned_items": 6,
+        "verified_fragments": 6,
+        "verified_object_count": 6,
+        "verified_object_bytes": 5368,
+        "groups_omitted_before": 0,
+        "groups_omitted_after": 250,
+        "groups_omitted_by_budget": 4
+      },
+      "bridge_query_process_ms": [
+        282.2345049935393,
+        275.9395479806699,
+        292.6056960131973
+      ],
+      "bridge_query_process_median_ms": 282.2345049935393,
+      "bridge_retrieve_process_ms": 199.76497301831841
+    },
+    {
+      "id": "same-checksum-symptom",
+      "query": "\"package checksum mismatch\"",
+      "literal_query": "Package checksum mismatch",
+      "components": [
+        "summary"
+      ],
+      "first_query_in_process_ms": 179.44879201240838,
+      "warm_ms": [
+        118.3444500202313,
+        107.85245697479695,
+        108.3990610204637
+      ],
+      "warm_median_ms": 108.3990610204637,
+      "literal_scan_ms": 111.21658602496609,
+      "literal_source_bytes_read": 480737,
+      "literal_matched_items": 256,
+      "returned_items": [
+        "issue:191",
+        "pr:182",
+        "issue:87",
+        "issue:101",
+        "issue:317",
+        "pr:400"
+      ],
+      "expected_items": [],
+      "known_positive_recall": null,
+      "output_bytes": 11216,
+      "diagnostics": {
+        "method": "fts5",
+        "score_is_probability": false,
+        "candidate_limit": 1000,
+        "candidates_considered": 512,
+        "candidates_truncated": false,
+        "ranked_groups": 256,
+        "fragment_mode": false,
+        "fragments_omitted_per_item": 256,
+        "offset": 0,
+        "returned_items": 6,
+        "verified_fragments": 6,
+        "verified_object_count": 6,
+        "verified_object_bytes": 5703,
+        "groups_omitted_before": 0,
+        "groups_omitted_after": 250,
+        "groups_omitted_by_budget": 4
+      },
+      "bridge_query_process_ms": [
+        278.67937297560275,
+        275.7290470181033,
+        276.51075302856043
+      ],
+      "bridge_query_process_median_ms": 276.51075302856043,
+      "bridge_retrieve_process_ms": 194.42292500752956
+    },
+    {
+      "id": "shared-path-distinct-fixes",
+      "query": "\"src/resume.py\"",
+      "literal_query": "src/resume.py",
+      "components": [
+        "files"
+      ],
+      "first_query_in_process_ms": 126.36612099595368,
+      "warm_ms": [
+        62.91825801599771,
+        64.19467000523582,
+        57.380508980713785
+      ],
+      "warm_median_ms": 62.91825801599771,
+      "literal_scan_ms": 45.56530498666689,
+      "literal_source_bytes_read": 33600,
+      "literal_matched_items": 128,
+      "returned_items": [
+        "pr:340",
+        "pr:268",
+        "pr:434",
+        "pr:482",
+        "pr:234",
+        "pr:66"
+      ],
+      "expected_items": [],
+      "known_positive_recall": null,
+      "output_bytes": 11521,
+      "diagnostics": {
+        "method": "fts5",
+        "score_is_probability": false,
+        "candidate_limit": 1000,
+        "candidates_considered": 128,
+        "candidates_truncated": false,
+        "ranked_groups": 128,
+        "fragment_mode": false,
+        "fragments_omitted_per_item": 0,
+        "offset": 0,
+        "returned_items": 6,
+        "verified_fragments": 6,
+        "verified_object_count": 2,
+        "verified_object_bytes": 252,
+        "groups_omitted_before": 0,
+        "groups_omitted_after": 122,
+        "groups_omitted_by_budget": 4
+      },
+      "bridge_query_process_ms": [
+        222.1252709859982,
+        219.40014703432098,
+        219.71204900182784
+      ],
+      "bridge_query_process_median_ms": 219.71204900182784,
+      "bridge_retrieve_process_ms": 195.6405360251665
+    },
+    {
+      "id": "cause-evidence",
+      "query": "\"upstream archive was replaced\"",
+      "literal_query": "upstream archive was replaced",
+      "components": [
+        "comments"
+      ],
+      "first_query_in_process_ms": 254.97576297493652,
+      "warm_ms": [
+        189.62118303170428,
+        185.94534997828305,
+        193.25591495726258
+      ],
+      "warm_median_ms": 189.62118303170428,
+      "literal_scan_ms": 517.7412939956412,
+      "literal_source_bytes_read": 47381880,
+      "literal_matched_items": 128,
+      "returned_items": [
+        "pr:328",
+        "pr:456",
+        "pr:128",
+        "pr:504"
+      ],
+      "expected_items": [],
+      "known_positive_recall": null,
+      "output_bytes": 10478,
+      "diagnostics": {
+        "method": "fts5",
+        "score_is_probability": false,
+        "candidate_limit": 1000,
+        "candidates_considered": 1000,
+        "candidates_truncated": true,
+        "ranked_groups": 128,
+        "fragment_mode": false,
+        "fragments_omitted_per_item": 872,
+        "offset": 0,
+        "returned_items": 4,
+        "verified_fragments": 4,
+        "verified_object_count": 4,
+        "verified_object_bytes": 437016,
+        "groups_omitted_before": 0,
+        "groups_omitted_after": 124,
+        "groups_omitted_by_budget": 6
+      },
+      "bridge_query_process_ms": [
+        362.53171699354425,
+        348.56049297377467,
+        358.25227899476886
+      ],
+      "bridge_query_process_median_ms": 358.25227899476886,
+      "bridge_retrieve_process_ms": 192.99531198339537
+    },
+    {
+      "id": "absent-marker",
+      "query": "nonexistent_marker_87b5",
+      "literal_query": "nonexistent_marker_87b5",
+      "components": [
+        "summary",
+        "comments"
+      ],
+      "first_query_in_process_ms": 7.3744659894146025,
+      "warm_ms": [
+        6.6188579658046365,
+        6.408357003238052,
+        6.5728589543141425
+      ],
+      "warm_median_ms": 6.5728589543141425,
+      "literal_scan_ms": 678.7096220068634,
+      "literal_source_bytes_read": 47862617,
+      "literal_matched_items": 0,
+      "returned_items": [],
+      "expected_items": [],
+      "known_positive_recall": null,
+      "output_bytes": 1641,
+      "diagnostics": {
+        "method": "fts5",
+        "score_is_probability": false,
+        "candidate_limit": 1000,
+        "candidates_considered": 0,
+        "candidates_truncated": false,
+        "ranked_groups": 0,
+        "fragment_mode": false,
+        "fragments_omitted_per_item": 0,
+        "offset": 0,
+        "returned_items": 0,
+        "verified_fragments": 0,
+        "verified_object_count": 0,
+        "verified_object_bytes": 0,
+        "groups_omitted_before": 0,
+        "groups_omitted_after": 0,
+        "groups_omitted_by_budget": 0
+      },
+      "bridge_query_process_ms": [
+        97.5821660249494,
+        105.53083597915247,
+        98.12827099813148
+      ],
+      "bridge_query_process_median_ms": 98.12827099813148
+    }
+  ],
+  "limits": "Literal scan verifies each examined object and uses the same named-field/chunk projections; this is not the existing CLI pagination benchmark. Timings include verification. OS caches are not cleared. Peak RSS includes selection/build/query/scan. Synthetic labels measure known retrieval targets, not duplicate decisions, reviewer time, or semantic quality.",
+  "label_authority": "Repeated synthetic causes for resource costs only; no ranking quality labels",
+  "bridge_cost_policy": "Separate Python process for each call, including startup and source verification; OS caches not cleared. Retrieval costs read one returned fragment. Peak RSS measures the separate engine benchmark process, not CLI subprocesses.",
+  "fixture": {
+    "synthetic": true,
+    "members": 512,
+    "groups": 64,
+    "repeat": 256
+  }
+}

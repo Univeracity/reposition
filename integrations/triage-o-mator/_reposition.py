@@ -9,6 +9,7 @@ COMMANDS = {
     "retrieve": "cache-retrieve",
     "search-info": "cache-info",
 }
+SUPPORTED_REPOSITION = "0.2.0.dev1"
 
 
 def register_commands(commands):
@@ -40,11 +41,17 @@ def maybe_run(argv):
         parser.error("the cache namespace is owned by this install; --cache cannot override it")
 
     try:
-        from reposition import CacheIndex  # noqa: F401
+        from reposition import __version__
         from reposition.cli import main
     except ImportError:
         sys.stderr.write(
-            "error: install the Reposition 0.2 cache-integration build in this Python environment; see the integration README. Existing cache search remains available.\n"
+            f"error: install Reposition {SUPPORTED_REPOSITION} in this Python environment; see docs/reposition.md. Existing cache search remains available.\n"
+        )
+        return 2
+
+    if __version__ != SUPPORTED_REPOSITION:
+        sys.stderr.write(
+            f"error: this bridge supports Reposition {SUPPORTED_REPOSITION}; installed version is {__version__}. Validate compatibility before upgrading. Existing cache search remains available.\n"
         )
         return 2
 
