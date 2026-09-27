@@ -226,7 +226,7 @@ def main(argv: list[str] | None = None) -> int:
                             byte_offset=args.byte_offset,
                         )
                     else:
-                        output = index.info()
+                        output = index.info(source, snapshot=args.snapshot, corpus=args.corpus)
             sys.stdout.write(encode_response(output))
             return 0
         if args.command == "index":

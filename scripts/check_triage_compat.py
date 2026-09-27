@@ -6,6 +6,8 @@ import argparse
 import importlib.util
 import json
 import os
+import shutil
+import sqlite3
 import subprocess
 import sys
 import tempfile
@@ -33,6 +35,16 @@ def check(checkout):
             "TRIAGE_ROOT": str(install),
             "PYTHONPATH": str(checkout / "bin"),
         }
+        fake_bin = temp / "fake-bin"
+        fake_bin.mkdir()
+        calls = temp / "unexpected-github-calls"
+        (fake_bin / "gh").write_text(
+            "#!/bin/sh\nprintf 'unexpected call\\n' >> \"$REPOSITION_CALLS\"\nexit 99\n"
+        )
+        (fake_bin / "gh").chmod(0o755)
+        environment.update(
+            PATH=str(fake_bin) + os.pathsep + environment["PATH"], REPOSITION_CALLS=str(calls)
+        )
 
         def run(arguments, expected=0, no_site=False):
             result = subprocess.run(
@@ -104,6 +116,31 @@ print(json.dumps({'snapshot':manifest['snapshot_id'],'corpus':corpus,'cache':str
         if "Reposition 0.2" not in missing.stderr:
             raise RuntimeError("optional dependency error is not actionable")
         build = json.loads(run([*command, "search-index", "--corpus", published["corpus"]]).stdout)
+        from reposition import TriageCache
+        from reposition.models import canonical, sha256
+
+        database = TriageCache(cache).index_path(corpus=published["corpus"])
+        info_command = [*command, "search-info", "--db", str(database)]
+        info = json.loads(run([*info_command, "--corpus", published["corpus"]]).stdout)
+        if info["source_checkpoint_verified"] or info["source_payloads_verified"]:
+            raise RuntimeError("metadata inspection falsely claims source verification")
+        run([*info_command, "--snapshot", published["snapshot"]], expected=2)
+        foreign = temp / "foreign.sqlite"
+        for changes in (
+            {"host": "other.example"},
+            {"full_name": "other/repository"},
+            {"database_id": 999},
+            {"node_id": "R_other"},
+            {"database_id": None},
+        ):
+            shutil.copyfile(database, foreign)
+            with sqlite3.connect(foreign) as connection:
+                metadata = json.loads(connection.execute("SELECT data FROM manifest").fetchone()[0])
+                metadata.pop("checksum")
+                metadata["repository"].update(changes)
+                metadata["checksum"] = sha256(canonical(metadata))
+                connection.execute("UPDATE manifest SET data=?", (canonical(metadata),))
+            run([*command, "search-info", "--db", str(foreign)], expected=2)
         response = run(
             [
                 *command,
@@ -163,6 +200,25 @@ print(json.dumps({'snapshot':manifest['snapshot_id'],'corpus':corpus,'cache':str
             ],
             expected=2,
         )
+        legacy_again = json.loads(
+            run(
+                [
+                    *command,
+                    "search",
+                    "--corpus",
+                    published["corpus"],
+                    "--query",
+                    "Resume",
+                    "--component",
+                    "comments",
+                    "--limit",
+                    "4",
+                ],
+                no_site=True,
+            ).stdout
+        )
+        if legacy_again != legacy:
+            raise RuntimeError("legacy literal search changed after using the bridge")
         run(
             [
                 *command,
@@ -179,6 +235,8 @@ print(json.dumps({'snapshot':manifest['snapshot_id'],'corpus':corpus,'cache':str
         after = {str(p.relative_to(cache)): p.read_bytes() for p in cache.rglob("*") if p.is_file()}
         if before != after:
             raise RuntimeError("retrieval changed authoritative cache artifacts")
+        if calls.exists():
+            raise RuntimeError("offline retrieval attempted a GitHub call")
         return {
             "schema": "reposition.triage-compatibility.v1",
             "passed": True,
@@ -186,6 +244,9 @@ print(json.dumps({'snapshot':manifest['snapshot_id'],'corpus':corpus,'cache':str
             "legacy_search_without_reposition": True,
             "missing_optional_package_actionable": True,
             "install_identity_and_cache_override_guards": True,
+            "search_info_identity_and_scope_guards": True,
+            "search_info_is_metadata_only": True,
+            "legacy_search_before_and_after_bridge": True,
             "query_and_retrieve_verified": True,
             "complete_response_max_bytes": 6000,
             "actual_query_bytes": len(response.stdout.encode()),

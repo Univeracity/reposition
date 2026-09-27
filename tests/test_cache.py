@@ -279,8 +279,41 @@ class CacheTests(unittest.TestCase):
         foreign = TriageCache(self.root)
         with CacheIndex(self.database) as index, self.assertRaises(ValueError):
             index.query(foreign, "terminal", snapshot=self.snapshot)
+        with CacheIndex(self.database) as index, self.assertRaises(ValueError):
+            index.info(foreign)
         with self.assertRaises(ValueError):
             CacheIndex.build(foreign, self.database, snapshot=self.snapshot, replace=True)
+
+    def test_metadata_inspection_checks_identity_and_scope_without_a_source_audit(self):
+        arguments = ["cache-info", "--cache", str(self.root), "--db", str(self.database)]
+        before = evidence_bytes(self.root)
+        with contextlib.redirect_stdout(io.StringIO()) as output:
+            self.assertEqual(main(arguments), 0)
+        info = json.loads(output.getvalue())
+        self.assertEqual(info["repository"], self.manifest["repository"])
+        self.assertFalse(info["source_checkpoint_verified"])
+        self.assertFalse(info["source_payloads_verified"])
+        with contextlib.redirect_stderr(io.StringIO()):
+            self.assertEqual(main([*arguments, "--corpus", self.corpus]), 2)
+        with contextlib.redirect_stdout(io.StringIO()):
+            self.assertEqual(main([*arguments, "--snapshot", self.snapshot]), 0)
+        self.assertEqual(before, evidence_bytes(self.root))
+        (self.root / "snapshots" / (self.snapshot + ".json")).unlink()
+        with contextlib.redirect_stdout(io.StringIO()):
+            self.assertEqual(main([*arguments, "--snapshot", self.snapshot]), 0)
+        metadata = json.loads((self.root / "cache.json").read_text())
+        for changes in (
+            {"full_name": "other/repository"},
+            {"host": "other.example"},
+            {"database_id": 999},
+            {"node_id": "R_other"},
+            {"database_id": None},
+        ):
+            with self.subTest(changes=changes), contextlib.redirect_stderr(io.StringIO()):
+                foreign = copy.deepcopy(metadata)
+                foreign["repository"].update(changes)
+                (self.root / "cache.json").write_text(canonical(foreign))
+                self.assertEqual(main(arguments), 2)
 
     def test_failed_build_keeps_previous_index_and_cleans_temporaries(self):
         before = self.database.read_bytes()

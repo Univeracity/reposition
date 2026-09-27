@@ -1,0 +1,10 @@
+{
+  "label_authority": "Authored synthetic source cases, not independently reviewed real duplicate verdicts",
+  "cases": [
+    {"id": "same-terminal-symptom", "query": "\"terminal blank after suspend\"", "literal_query": "Terminal blank after suspend", "components": ["summary"], "max_snippets_per_item": 1, "expected_items": ["issue:1", "pr:2", "issue:3", "pr:4"]},
+    {"id": "same-checksum-symptom", "query": "\"package checksum mismatch\"", "literal_query": "Package checksum mismatch", "components": ["summary"], "max_snippets_per_item": 1, "expected_items": ["issue:5", "pr:6", "issue:7", "pr:8"]},
+    {"id": "shared-path-distinct-fixes", "query": "\"src/resume.py\"", "literal_query": "src/resume.py", "components": ["files"], "max_snippets_per_item": 1, "expected_items": ["pr:2", "pr:4"]},
+    {"id": "cause-evidence", "query": "\"upstream archive was replaced\"", "literal_query": "upstream archive was replaced", "components": ["comments"], "max_snippets_per_item": 1, "expected_items": ["issue:7", "pr:8"]},
+    {"id": "absent-marker", "query": "nonexistent_marker_87b5", "components": ["summary", "comments"]}
+  ]
+}

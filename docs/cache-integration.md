@@ -54,6 +54,14 @@ An optional [triage-o-mator bridge](../integrations/triage-o-mator/README.md)
 provides `bin/cache search-index`, `query`, `retrieve` and `search-info`, while
 preserving existing literal search and readers when Reposition is absent.
 
+`cache-info` (bridge: `search-info`) checks the index repository against the
+selected cache, including known stable IDs. A supplied snapshot or corpus must
+match the indexed selection, even with an explicit `--db`. Without a scope,
+`--db` may inspect any view belonging to that repository. This reads index
+metadata only: it does not verify source checkpoints or payloads, and remains
+usable for inspecting a stale index before rebuilding. Its JSON explicitly
+marks both source-verification flags false; it is not a freshness claim.
+
 ## Scope and authority
 
 Every view names exactly one immutable snapshot or frozen corpus. Repository

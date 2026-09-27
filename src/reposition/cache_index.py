@@ -498,9 +498,13 @@ class CacheIndex:
             lock.rmdir()
             _sync(destination.parent)
 
-    def _scope(self, source: TriageCache, snapshot: str | None, corpus: str | None):
+    def _identity(self, source: TriageCache):
         if self.path.is_symlink() or _stamp(self.path) != self.file_stamp:
             raise ValueError("cache index changed or was replaced; reopen and restart discovery")
+        contract.same_repository(self.manifest["repository"], source.repository)
+        contract.same_repository(source.repository, self.manifest["repository"])
+
+    def _selection(self, snapshot: str | None, corpus: str | None):
         if (snapshot, corpus) != (
             self.manifest["scope"]["snapshot_id"],
             self.manifest["scope"]["corpus_id"],
@@ -508,8 +512,10 @@ class CacheIndex:
             raise ValueError(
                 "query scope differs from indexed selection; build or select the exact view"
             )
-        contract.same_repository(self.manifest["repository"], source.repository)
-        contract.same_repository(source.repository, self.manifest["repository"])
+
+    def _scope(self, source: TriageCache, snapshot: str | None, corpus: str | None):
+        self._identity(source)
+        self._selection(snapshot, corpus)
         if (
             source.checkpoint(snapshot=snapshot, corpus=corpus)
             != self.manifest["source_checkpoint"]
@@ -1056,11 +1062,17 @@ class CacheIndex:
         self._scope(source, snapshot, corpus)
         return output
 
-    def info(self):
+    def info(self, source: TriageCache, *, snapshot: str | None = None, corpus: str | None = None):
+        """Inspect identity-bound index metadata without auditing source payloads or freshness."""
+        self._identity(source)
+        if snapshot is not None or corpus is not None:
+            self._selection(snapshot, corpus)
         return {
             "schema": "reposition.cache-info.v1",
             **self.manifest,
             "index_bytes": self.path.stat().st_size,
+            "source_checkpoint_verified": False,
+            "source_payloads_verified": False,
             "requests": 0,
         }
 
