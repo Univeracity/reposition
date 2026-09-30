@@ -6,13 +6,18 @@
  "acquisition": {
   "tool": "triage-o-mator bin/cache corpus-run --bulk, profile backlog, scope open-prs",
   "triage_o_mator_base_commit": "d329d6a4a738900e7dec15930635efe8298b6c47",
+  "corpus_id": "4c02b4b0e3555733e87406cf72edb88e23c493f1e02bfa3a93d5b8b9c03285d1",
+  "corpus_checkpoint": "ff0bd6495c6a3034681d7456f904a25c9ce03fa60f651cd41b24b60afe78aa8b",
+  "corpus_state_updated_at": "2026-09-30T18:05:20.939091+00:00",
+  "inventory_snapshot": "350e61a6289c21fae00685c983af5983fb5235acffa283b3378f238500244507",
+  "checkpoint_note": "bin/cache corpus-list checkpoint of the finished corpus; its state was last updated before the trial ran and not after",
   "inventory_items": 4971,
   "corpus_members": 2849,
   "complete": 2643,
   "with_gaps": 206
  },
  "cases_file": "examples/omarchy-review-cases.json",
- "label_authority": "Independent hand-checked duplicate groups for omacom/omarchy by @aholbreich (omacom/omarchy#11049, 2026-09-27 update), each checked by reading the diffs. Queries are the oldest open member's title, chosen by us, not by the labeller. Membership is limited to PRs open in the ledger used to build the cases.",
+ "label_authority": "Hand-checked duplicate groups for omacom/omarchy by @aholbreich (2026-09-27 update to omacom/omarchy#11049). He found candidates by clustering titles and requiring a shared primary file, then checked each by reading the diffs, so the labels are independent of Reposition and triage-o-mator but share a lexical candidate step with this retrieval. Queries are the oldest open member's title, chosen by us, not by the labeller. Membership is limited to PRs open in the ledger used to build the cases.",
  "components": [
   "summary",
   "files",

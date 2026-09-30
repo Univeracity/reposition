@@ -9,11 +9,17 @@ repository, one machine and one run; it does not qualify the defaults.
 triage-o-mator's bulk `backlog` acquisition froze all 2,849 open PRs of
 omacom/omarchy on 2026-09-30: 2,643 complete and 206 with recorded gaps. No
 cache is committed here; the [receipt](../validation/omarchy-backlog-trial.json)
-records the corpus shape and base commit.
+records the corpus ID, its progress checkpoint, the inventory snapshot and the
+base commit, so a rerun can tell whether it reads the same input.
 
-The labels are independent of Reposition and of every discovery signal. In
-omacom/omarchy#11049, @aholbreich published 28 duplicate groups and 27 pairs
-of open PRs on 2026-09-27, each checked by reading the diffs. The
+The labels are independent of Reposition and triage-o-mator. In an
+[update to omacom/omarchy#11049](https://github.com/omacom/omarchy/issues/11049#issuecomment-5857142203),
+@aholbreich published 28 duplicate groups and 27 pairs of open PRs on
+2026-09-27. He found candidates by clustering titles and requiring a shared
+primary file, then checked each one by reading the diffs. That candidate step
+overlaps with searching summaries and file lists, so the cases may favour
+duplicates that lexical retrieval finds easily; the manual review settles
+membership, not how the candidates were found. The
 [case file](../examples/omarchy-review-cases.json) keeps the 55 groups with two
 or more open PRs. Each query is the oldest open member's own title, searched over
 `summary`, `files` and `diff`: where a triager asking "is #N a duplicate?"
@@ -45,7 +51,8 @@ Precision is not measured: the labels say which PRs belong together, not how
 relevant each other returned item is. A returned item is a lead to read, never
 a duplicate decision. Timings are from one run on one machine with OS caches not
 cleared and nothing else running. Recreating the cache needs GitHub access and a
-triage-o-mator install; rerun with:
+triage-o-mator install, and a new acquisition gets a new corpus ID and
+checkpoint; compare them with the receipt. Rerun with:
 
 ```sh
 python benchmarks/cache_retrieval.py --cache /path/to/install/data/omacom/omarchy/cache \
