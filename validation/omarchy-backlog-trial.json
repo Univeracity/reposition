@@ -1,6 +1,14 @@
 {
  "schema": "reposition.real-backlog-trial.v1",
  "measured_at": "2026-09-30",
+ "environment": {
+  "cpu": "AMD Ryzen AI 7 PRO 350 (8 cores, 16 threads)",
+  "memory_gib": 27,
+  "storage": "NVMe SSD, btrfs",
+  "os": "Linux 7.2.5",
+  "python": "3.14.7",
+  "sqlite": "3.53.4"
+ },
  "repository": "omacom/omarchy",
  "reposition_commit": "7a76620821a4ddf0423d89e98f908700ea7aae94",
  "acquisition": {
@@ -47,7 +55,9 @@
   "median_returned_items": 5,
   "median_warm_query_ms": 318.5,
   "median_literal_scan_ms": 3863.5,
-  "cases_with_truncated_candidates": 55
+  "cases_with_truncated_candidates": 55,
+  "literal_scan_note": "Cost reference, not a like-for-like comparison: the scan matches each case's whole title as one case-sensitive substring in every verified projection, while the FTS5 query ranks any-term matches.",
+  "median_literal_matched_items": 2
  },
  "limits": "One machine, one run, OS caches not cleared, nothing else running. The query is the oldest open member's own title, so that member is always found; other_members_returned excludes it. Labels are hand-checked same-fix groups, not relevance grades for every returned item, so precision is not measured. Retrieval is not a duplicate decision.",
  "cases": [

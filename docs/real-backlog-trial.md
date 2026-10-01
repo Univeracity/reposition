@@ -35,8 +35,8 @@ later decision-level evaluation; retrieval returning them is expected.
 | Other group members returned (anchor excluded) | 75 / 91 (82.4%) |
 | Cases with every member returned | 46 / 55 |
 | Median returned items per case | 5 |
-| Median warm query | 318 ms |
-| Median verified literal scan, same projections | 3,864 ms |
+| Median warm FTS5 query (ranked, any-term) | 318 ms |
+| Median verified literal scan (cost reference only) | 3,864 ms |
 | Indexed source / index size | 103.3 / 192.6 MiB |
 | Build time / peak RSS | 26.9 s / 679 MiB |
 
@@ -44,6 +44,17 @@ The anchor's own title always finds the anchor, so the 82.4% figure is the one
 that measures finding its duplicates. Every case hit the 1,000-candidate limit:
 a title's ordinary terms use any-term matching, so ranking, not filtering, does
 the work. The index is 1.86 times the indexed source.
+
+The literal scan is a cost reference, not a like-for-like latency or retrieval
+comparison. The benchmark's scan looks for each case's whole title as one
+case-sensitive substring in every verified projection, while the FTS5 query
+ranks any-term matches. They answer different questions: the median scan
+matched 2 items, while every FTS5 query reached its 1,000-candidate limit. The
+scan time shows what reading and verifying every projection costs, not how much
+faster ranked search finds the same results.
+
+Measured on an AMD Ryzen AI 7 PRO 350 (8 cores, 16 threads) with 27 GiB of
+RAM and an NVMe SSD (btrfs), Linux 7.2.5, Python 3.14.7 and SQLite 3.53.4.
 
 ## Limits
 
