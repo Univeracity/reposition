@@ -1,0 +1,837 @@
+{
+ "label_authority": "Hand-checked duplicate groups for omacom/omarchy by @aholbreich (2026-09-27 update to omacom/omarchy#11049). He found candidates by clustering titles and requiring a shared primary file, then checked each by reading the diffs, so the labels are independent of Reposition and triage-o-mator but share a lexical candidate step with this retrieval. Queries are the oldest open member's title, chosen by us, not by the labeller. Membership is limited to PRs open in the ledger used to build the cases.",
+ "source": "https://github.com/omacom/omarchy/issues/11049#issuecomment-5857142203",
+ "hard_negatives": [
+  {
+   "pr": 10113,
+   "near": [
+    9605,
+    10411,
+    11994,
+    12019,
+    12264,
+    12323,
+    13154,
+    13213
+   ],
+   "why": "fixes the same windows-vm bug the other way round, by accepting the mode instead of clearing it"
+  },
+  {
+   "pr": 11803,
+   "near": [
+    7023,
+    12022,
+    12150
+   ],
+   "why": "documents the current toggle bar behaviour instead of flipping it"
+  }
+ ],
+ "cases": [
+  {
+   "id": "omarchy-9605-omarchy-windows-vm-clear-setgid-on-mount",
+   "query": "Clear set-ID bits when securing the Windows VM mount sources",
+   "components": [
+    "summary",
+    "files",
+    "diff"
+   ],
+   "max_snippets_per_item": 1,
+   "expected_items": [
+    "pr:9605",
+    "pr:10411",
+    "pr:12019",
+    "pr:12264",
+    "pr:12323",
+    "pr:13154",
+    "pr:13213"
+   ]
+  },
+  {
+   "id": "omarchy-7074-remember-menu-position-when-navigating-b",
+   "query": "Remember cursor position when navigating back in the root menu",
+   "components": [
+    "summary",
+    "files",
+    "diff"
+   ],
+   "max_snippets_per_item": 1,
+   "expected_items": [
+    "pr:7074",
+    "pr:7954",
+    "pr:11577",
+    "pr:12098",
+    "pr:12644",
+    "pr:12759",
+    "pr:13012",
+    "pr:13225"
+   ]
+  },
+  {
+   "id": "omarchy-8879-enable-sunshine-by-its-real-unit-name",
+   "query": "Use Sunshine's packaged systemd unit",
+   "components": [
+    "summary",
+    "files",
+    "diff"
+   ],
+   "max_snippets_per_item": 1,
+   "expected_items": [
+    "pr:8879",
+    "pr:12271",
+    "pr:12358",
+    "pr:12472",
+    "pr:12505",
+    "pr:13230",
+    "pr:13331"
+   ]
+  },
+  {
+   "id": "omarchy-7186-battery-status-across-all-packs",
+   "query": "Report combined dual-battery status in the power panel",
+   "components": [
+    "summary",
+    "files",
+    "diff"
+   ],
+   "max_snippets_per_item": 1,
+   "expected_items": [
+    "pr:7186",
+    "pr:10392",
+    "pr:12024",
+    "pr:12445"
+   ]
+  },
+  {
+   "id": "omarchy-7023-omarchy-toggle-bar-on-off-inverted",
+   "query": "Fix inverted on/off semantics in omarchy-toggle-bar",
+   "components": [
+    "summary",
+    "files",
+    "diff"
+   ],
+   "max_snippets_per_item": 1,
+   "expected_items": [
+    "pr:7023",
+    "pr:12022",
+    "pr:12150"
+   ]
+  },
+  {
+   "id": "omarchy-6485-grok-usage-collector",
+   "query": "Add a Grok usage collector",
+   "components": [
+    "summary",
+    "files",
+    "diff"
+   ],
+   "max_snippets_per_item": 1,
+   "expected_items": [
+    "pr:6485",
+    "pr:12352",
+    "pr:13219"
+   ]
+  },
+  {
+   "id": "omarchy-5774-vivaldi-browser-support",
+   "query": "Add Vivaldi browser support (fixed)",
+   "components": [
+    "summary",
+    "files",
+    "diff"
+   ],
+   "max_snippets_per_item": 1,
+   "expected_items": [
+    "pr:5774",
+    "pr:9430",
+    "pr:12754"
+   ]
+  },
+  {
+   "id": "omarchy-7283-clipboard-shortcuts-on-non-latin-layouts",
+   "query": "Use layout-independent universal clipboard shortcuts",
+   "components": [
+    "summary",
+    "files",
+    "diff"
+   ],
+   "max_snippets_per_item": 1,
+   "expected_items": [
+    "pr:7283",
+    "pr:9130",
+    "pr:13007"
+   ]
+  },
+  {
+   "id": "omarchy-6647-hermes-usage-collector",
+   "query": "Add local and remote Hermes usage sources to Agents panel",
+   "components": [
+    "summary",
+    "files",
+    "diff"
+   ],
+   "max_snippets_per_item": 1,
+   "expected_items": [
+    "pr:6647",
+    "pr:9871"
+   ]
+  },
+  {
+   "id": "omarchy-7016-fuzzy-menu-search",
+   "query": "Added fuzzy search to menu",
+   "components": [
+    "summary",
+    "files",
+    "diff"
+   ],
+   "max_snippets_per_item": 1,
+   "expected_items": [
+    "pr:7016",
+    "pr:8987"
+   ]
+  },
+  {
+   "id": "omarchy-8065-opencode-go-usage-collector",
+   "query": "Add OpenCode Go usage collector for the agents panel",
+   "components": [
+    "summary",
+    "files",
+    "diff"
+   ],
+   "max_snippets_per_item": 1,
+   "expected_items": [
+    "pr:8065",
+    "pr:12651"
+   ]
+  },
+  {
+   "id": "omarchy-8479-antigravity-usage-collector-agy-vs-antig",
+   "query": "Add Antigravity (agy) agent usage collector and test suite",
+   "components": [
+    "summary",
+    "files",
+    "diff"
+   ],
+   "max_snippets_per_item": 1,
+   "expected_items": [
+    "pr:8479",
+    "pr:11989"
+   ]
+  },
+  {
+   "id": "omarchy-11415-dismiss-low-battery-warning-on-charge",
+   "query": "Dismiss stale low battery warnings",
+   "components": [
+    "summary",
+    "files",
+    "diff"
+   ],
+   "max_snippets_per_item": 1,
+   "expected_items": [
+    "pr:11415",
+    "pr:11959"
+   ]
+  },
+  {
+   "id": "omarchy-10476-calendar-grid-shifts-on-midnight-dst-swi",
+   "query": "Build the calendar month grid in UTC",
+   "components": [
+    "summary",
+    "files",
+    "diff"
+   ],
+   "max_snippets_per_item": 1,
+   "expected_items": [
+    "pr:10476",
+    "pr:13096",
+    "pr:13127",
+    "pr:13186"
+   ]
+  },
+  {
+   "id": "omarchy-8019-show-hide-toggle-for-the-wi-fi-passphras",
+   "query": "Eye toggle to show/hide the Wi-Fi password",
+   "components": [
+    "summary",
+    "files",
+    "diff"
+   ],
+   "max_snippets_per_item": 1,
+   "expected_items": [
+    "pr:8019",
+    "pr:11720",
+    "pr:12891",
+    "pr:12925"
+   ]
+  },
+  {
+   "id": "omarchy-10364-keyboard-backlight-lost-after-repeated-b",
+   "query": "Preserve keyboard backlight across repeated blanks",
+   "components": [
+    "summary",
+    "files",
+    "diff"
+   ],
+   "max_snippets_per_item": 1,
+   "expected_items": [
+    "pr:10364",
+    "pr:10366",
+    "pr:11404",
+    "pr:12960"
+   ]
+  },
+  {
+   "id": "omarchy-7592-lock-screen-password-focus-after-resume",
+   "query": "Refocus the lock password field after resume",
+   "components": [
+    "summary",
+    "files",
+    "diff"
+   ],
+   "max_snippets_per_item": 1,
+   "expected_items": [
+    "pr:7592",
+    "pr:8560",
+    "pr:12435"
+   ]
+  },
+  {
+   "id": "omarchy-9168-kitty-bold-italic-faces-on-font-set",
+   "query": "fix(font): reset explicit kitty bold/italic font variants to auto on font set",
+   "components": [
+    "summary",
+    "files",
+    "diff"
+   ],
+   "max_snippets_per_item": 1,
+   "expected_items": [
+    "pr:9168",
+    "pr:12171",
+    "pr:13235"
+   ]
+  },
+  {
+   "id": "omarchy-10194-display-panel-toggle-under-the-lua-confi",
+   "query": "Fix the display panel's on/off rows under the Lua config parser",
+   "components": [
+    "summary",
+    "files",
+    "diff"
+   ],
+   "max_snippets_per_item": 1,
+   "expected_items": [
+    "pr:10194",
+    "pr:11112",
+    "pr:13223"
+   ]
+  },
+  {
+   "id": "omarchy-7723-keep-the-last-valid-shell-json",
+   "query": "Keep last good shell config when user shell.json fails to parse",
+   "components": [
+    "summary",
+    "files",
+    "diff"
+   ],
+   "max_snippets_per_item": 1,
+   "expected_items": [
+    "pr:7723",
+    "pr:12992",
+    "pr:13104"
+   ]
+  },
+  {
+   "id": "omarchy-12935-fontconfig-monospace-rule-as-a-conf-d-dr",
+   "query": "Write fontconfig monospace override to conf.d drop-in",
+   "components": [
+    "summary",
+    "files",
+    "diff"
+   ],
+   "max_snippets_per_item": 1,
+   "expected_items": [
+    "pr:12935",
+    "pr:12999",
+    "pr:13092"
+   ]
+  },
+  {
+   "id": "omarchy-7564-keybindings-menu-lua-bind-scan",
+   "query": "Make the keybindings menu's Lua bind scan safe against load-time config reads",
+   "components": [
+    "summary",
+    "files",
+    "diff"
+   ],
+   "max_snippets_per_item": 1,
+   "expected_items": [
+    "pr:7564",
+    "pr:12916",
+    "pr:13276"
+   ]
+  },
+  {
+   "id": "omarchy-7661-rank-apps-above-menu-actions-in-search",
+   "query": "fix(menu): rank apps above destructive actions",
+   "components": [
+    "summary",
+    "files",
+    "diff"
+   ],
+   "max_snippets_per_item": 1,
+   "expected_items": [
+    "pr:7661",
+    "pr:11730",
+    "pr:12223"
+   ]
+  },
+  {
+   "id": "omarchy-8084-ssh-reconnect-leaving-the-alternate-scre",
+   "query": "Leave the alternate screen only when the connection dropped",
+   "components": [
+    "summary",
+    "files",
+    "diff"
+   ],
+   "max_snippets_per_item": 1,
+   "expected_items": [
+    "pr:8084",
+    "pr:12063",
+    "pr:13116"
+   ]
+  },
+  {
+   "id": "omarchy-7042-ctrl-n-ctrl-p-menu-navigation",
+   "query": "Add Ctrl-N and Ctrl-P menu navigation",
+   "components": [
+    "summary",
+    "files",
+    "diff"
+   ],
+   "max_snippets_per_item": 1,
+   "expected_items": [
+    "pr:7042",
+    "pr:10934"
+   ]
+  },
+  {
+   "id": "omarchy-7680-lock-screen-password-reveal-toggle",
+   "query": "Add a reveal toggle to the lock screen password field",
+   "components": [
+    "summary",
+    "files",
+    "diff"
+   ],
+   "max_snippets_per_item": 1,
+   "expected_items": [
+    "pr:7680",
+    "pr:13183"
+   ]
+  },
+  {
+   "id": "omarchy-8824-orphan-prompt-under-omarchy-update-y",
+   "query": "Skip orphan prompt during unattended updates",
+   "components": [
+    "summary",
+    "files",
+    "diff"
+   ],
+   "max_snippets_per_item": 1,
+   "expected_items": [
+    "pr:8824",
+    "pr:13371"
+   ]
+  },
+  {
+   "id": "omarchy-8590-unset-omarchy-path-in-update-dev",
+   "query": "Handle unset OMARCHY_PATH in update-dev",
+   "components": [
+    "summary",
+    "files",
+    "diff"
+   ],
+   "max_snippets_per_item": 1,
+   "expected_items": [
+    "pr:8590",
+    "pr:12860"
+   ]
+  },
+  {
+   "id": "omarchy-7783-same-lines-same-fix",
+   "query": "Keep PwNode objects out of the audio panel's Repeater models",
+   "components": [
+    "summary",
+    "files",
+    "diff"
+   ],
+   "max_snippets_per_item": 1,
+   "expected_items": [
+    "pr:7783",
+    "pr:12658"
+   ]
+  },
+  {
+   "id": "omarchy-11069-same-lines-same-fix",
+   "query": "Run declared plugin cleanup before removal",
+   "components": [
+    "summary",
+    "files",
+    "diff"
+   ],
+   "max_snippets_per_item": 1,
+   "expected_items": [
+    "pr:11069",
+    "pr:11470"
+   ]
+  },
+  {
+   "id": "omarchy-8429-same-lines-same-fix",
+   "query": "[Security] Keep the update transcript out of world-writable /tmp",
+   "components": [
+    "summary",
+    "files",
+    "diff"
+   ],
+   "max_snippets_per_item": 1,
+   "expected_items": [
+    "pr:8429",
+    "pr:12957"
+   ]
+  },
+  {
+   "id": "omarchy-10413-same-lines-same-fix",
+   "query": "Harden omarchy-refresh-config against path traversal",
+   "components": [
+    "summary",
+    "files",
+    "diff"
+   ],
+   "max_snippets_per_item": 1,
+   "expected_items": [
+    "pr:10413",
+    "pr:13214"
+   ]
+  },
+  {
+   "id": "omarchy-13041-same-lines-same-fix",
+   "query": "Honour explicit expireTimeout for critical notifications (#12911)",
+   "components": [
+    "summary",
+    "files",
+    "diff"
+   ],
+   "max_snippets_per_item": 1,
+   "expected_items": [
+    "pr:13041",
+    "pr:13100"
+   ]
+  },
+  {
+   "id": "omarchy-13044-same-lines-same-fix",
+   "query": "fix(launch-editor): pass wait flags to GUI editors in inline mode (#13037)",
+   "components": [
+    "summary",
+    "files",
+    "diff"
+   ],
+   "max_snippets_per_item": 1,
+   "expected_items": [
+    "pr:13044",
+    "pr:13094"
+   ]
+  },
+  {
+   "id": "omarchy-8875-same-lines-same-fix",
+   "query": "Install lib32 GPU drivers before Steam",
+   "components": [
+    "summary",
+    "files",
+    "diff"
+   ],
+   "max_snippets_per_item": 1,
+   "expected_items": [
+    "pr:8875",
+    "pr:12569"
+   ]
+  },
+  {
+   "id": "omarchy-11235-same-lines-same-fix",
+   "query": "Stop speedtest workers when their parent is killed",
+   "components": [
+    "summary",
+    "files",
+    "diff"
+   ],
+   "max_snippets_per_item": 1,
+   "expected_items": [
+    "pr:11235",
+    "pr:12196"
+   ]
+  },
+  {
+   "id": "omarchy-11344-same-lines-same-fix",
+   "query": "Support both zed and zeditor editor binaries",
+   "components": [
+    "summary",
+    "files",
+    "diff"
+   ],
+   "max_snippets_per_item": 1,
+   "expected_items": [
+    "pr:11344",
+    "pr:13236"
+   ]
+  },
+  {
+   "id": "omarchy-11364-same-lines-same-fix",
+   "query": "Keep existing wine when installing Lutris",
+   "components": [
+    "summary",
+    "files",
+    "diff"
+   ],
+   "max_snippets_per_item": 1,
+   "expected_items": [
+    "pr:11364",
+    "pr:12089"
+   ]
+  },
+  {
+   "id": "omarchy-11893-same-lines-same-fix",
+   "query": "fix(screenrecording): escalate webcam cleanup to SIGKILL and clear on stop-recording",
+   "components": [
+    "summary",
+    "files",
+    "diff"
+   ],
+   "max_snippets_per_item": 1,
+   "expected_items": [
+    "pr:11893",
+    "pr:12021"
+   ]
+  },
+  {
+   "id": "omarchy-11918-same-lines-same-fix",
+   "query": "Back off fingerprint retries that fail immediately",
+   "components": [
+    "summary",
+    "files",
+    "diff"
+   ],
+   "max_snippets_per_item": 1,
+   "expected_items": [
+    "pr:11918",
+    "pr:12544"
+   ]
+  },
+  {
+   "id": "omarchy-11273-same-lines-same-fix",
+   "query": "Lock screen: keep fingerprint idle while the display is blanked",
+   "components": [
+    "summary",
+    "files",
+    "diff"
+   ],
+   "max_snippets_per_item": 1,
+   "expected_items": [
+    "pr:11273",
+    "pr:12420"
+   ]
+  },
+  {
+   "id": "omarchy-12585-same-lines-same-fix",
+   "query": "Keep the Bluetooth widget on the bar while the radio is off",
+   "components": [
+    "summary",
+    "files",
+    "diff"
+   ],
+   "max_snippets_per_item": 1,
+   "expected_items": [
+    "pr:12585",
+    "pr:13204"
+   ]
+  },
+  {
+   "id": "omarchy-10749-same-lines-same-fix",
+   "query": "Keep the Bluetooth bar icon visible when there's no adapter",
+   "components": [
+    "summary",
+    "files",
+    "diff"
+   ],
+   "max_snippets_per_item": 1,
+   "expected_items": [
+    "pr:10749",
+    "pr:12241"
+   ]
+  },
+  {
+   "id": "omarchy-12649-same-lines-same-fix",
+   "query": "Keep UPower rate when sysfs power read fails with ENODEV",
+   "components": [
+    "summary",
+    "files",
+    "diff"
+   ],
+   "max_snippets_per_item": 1,
+   "expected_items": [
+    "pr:12649",
+    "pr:12755"
+   ]
+  },
+  {
+   "id": "omarchy-11565-same-lines-same-fix",
+   "query": "Scope LocalSend firewall rules to private and local subnets (#11560)",
+   "components": [
+    "summary",
+    "files",
+    "diff"
+   ],
+   "max_snippets_per_item": 1,
+   "expected_items": [
+    "pr:11565",
+    "pr:12831"
+   ]
+  },
+  {
+   "id": "omarchy-11933-same-lines-same-fix",
+   "query": "Install Bitwarden desktop even when CLI conflicts with nodejs",
+   "components": [
+    "summary",
+    "files",
+    "diff"
+   ],
+   "max_snippets_per_item": 1,
+   "expected_items": [
+    "pr:11933",
+    "pr:12870"
+   ]
+  },
+  {
+   "id": "omarchy-10159-same-lines-same-fix",
+   "query": "Match Google Meet PiP titles that use an en dash",
+   "components": [
+    "summary",
+    "files",
+    "diff"
+   ],
+   "max_snippets_per_item": 1,
+   "expected_items": [
+    "pr:10159",
+    "pr:11169"
+   ]
+  },
+  {
+   "id": "omarchy-9847-same-lines-same-fix",
+   "query": "Keep Quickshell logs from exhausting the user runtime dir",
+   "components": [
+    "summary",
+    "files",
+    "diff"
+   ],
+   "max_snippets_per_item": 1,
+   "expected_items": [
+    "pr:9847",
+    "pr:13314"
+   ]
+  },
+  {
+   "id": "omarchy-8692-same-lines-same-fix",
+   "query": "Resolve mise wrapper binaries before execution",
+   "components": [
+    "summary",
+    "files",
+    "diff"
+   ],
+   "max_snippets_per_item": 1,
+   "expected_items": [
+    "pr:8692",
+    "pr:13090"
+   ]
+  },
+  {
+   "id": "omarchy-8414-same-lines-same-fix",
+   "query": "Detect Microarray MAFP fingerprint reader",
+   "components": [
+    "summary",
+    "files",
+    "diff"
+   ],
+   "max_snippets_per_item": 1,
+   "expected_items": [
+    "pr:8414",
+    "pr:12936"
+   ]
+  },
+  {
+   "id": "omarchy-10877-same-lines-same-fix",
+   "query": "Target the actual NVMe controller in Apple suspend fix",
+   "components": [
+    "summary",
+    "files",
+    "diff"
+   ],
+   "max_snippets_per_item": 1,
+   "expected_items": [
+    "pr:10877",
+    "pr:11624"
+   ]
+  },
+  {
+   "id": "omarchy-8406-same-lines-same-fix",
+   "query": "Keep system binaries ahead of the mise shims in the uwsm session",
+   "components": [
+    "summary",
+    "files",
+    "diff"
+   ],
+   "max_snippets_per_item": 1,
+   "expected_items": [
+    "pr:8406",
+    "pr:13364"
+   ]
+  },
+  {
+   "id": "omarchy-11728-same-lines-same-fix",
+   "query": "fix(browser): support wrapped Exec commands in browser and webapp launchers",
+   "components": [
+    "summary",
+    "files",
+    "diff"
+   ],
+   "max_snippets_per_item": 1,
+   "expected_items": [
+    "pr:11728",
+    "pr:12533"
+   ]
+  },
+  {
+   "id": "omarchy-8023-same-lines-same-fix",
+   "query": "Accept numpad and AltGr input in the menu and image picker filters",
+   "components": [
+    "summary",
+    "files",
+    "diff"
+   ],
+   "max_snippets_per_item": 1,
+   "expected_items": [
+    "pr:8023",
+    "pr:12574"
+   ]
+  },
+  {
+   "id": "omarchy-7833-same-lines-same-fix",
+   "query": "Remove the toast when a sender closes its own notification",
+   "components": [
+    "summary",
+    "files",
+    "diff"
+   ],
+   "max_snippets_per_item": 1,
+   "expected_items": [
+    "pr:7833",
+    "pr:11338"
+   ]
+  }
+ ]
+}

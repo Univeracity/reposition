@@ -1,0 +1,695 @@
+{
+ "schema": "reposition.real-backlog-trial.v1",
+ "measured_at": "2026-09-30",
+ "environment": {
+  "cpu": "AMD Ryzen AI 7 PRO 350 (8 cores, 16 threads)",
+  "memory_gib": 27,
+  "storage": "NVMe SSD, btrfs",
+  "os": "Linux 7.2.5",
+  "python": "3.14.7",
+  "sqlite": "3.53.4"
+ },
+ "repository": "omacom/omarchy",
+ "reposition_commit": "7a76620821a4ddf0423d89e98f908700ea7aae94",
+ "acquisition": {
+  "tool": "triage-o-mator bin/cache corpus-run --bulk, profile backlog, scope open-prs",
+  "triage_o_mator_base_commit": "d329d6a4a738900e7dec15930635efe8298b6c47",
+  "corpus_id": "4c02b4b0e3555733e87406cf72edb88e23c493f1e02bfa3a93d5b8b9c03285d1",
+  "corpus_checkpoint": "ff0bd6495c6a3034681d7456f904a25c9ce03fa60f651cd41b24b60afe78aa8b",
+  "corpus_state_updated_at": "2026-09-30T18:05:20.939091+00:00",
+  "inventory_snapshot": "350e61a6289c21fae00685c983af5983fb5235acffa283b3378f238500244507",
+  "checkpoint_note": "bin/cache corpus-list checkpoint of the finished corpus; its state was last updated before the trial ran and not after",
+  "inventory_items": 4971,
+  "corpus_members": 2849,
+  "complete": 2643,
+  "with_gaps": 206
+ },
+ "cases_file": "examples/omarchy-review-cases.json",
+ "label_authority": "Hand-checked duplicate groups for omacom/omarchy by @aholbreich (2026-09-27 update to omacom/omarchy#11049). He found candidates by clustering titles and requiring a shared primary file, then checked each by reading the diffs, so the labels are independent of Reposition and triage-o-mator but share a lexical candidate step with this retrieval. Queries are the oldest open member's title, chosen by us, not by the labeller. Membership is limited to PRs open in the ledger used to build the cases.",
+ "components": [
+  "summary",
+  "files",
+  "diff"
+ ],
+ "response_max_bytes": 12000,
+ "index": {
+  "source_cache_bytes": 141961496,
+  "indexed_source_object_bytes": 108320045,
+  "index_bytes": 201940992,
+  "units": 101181,
+  "objects": 11042,
+  "build_seconds": 26.918490072999703,
+  "peak_process_rss_bytes": 711888896
+ },
+ "summary": {
+  "cases": 55,
+  "expected_items_returned": [
+   130,
+   146
+  ],
+  "other_members_returned": [
+   75,
+   91
+  ],
+  "cases_with_full_recall": 46,
+  "median_returned_items": 5,
+  "median_warm_query_ms": 318.5,
+  "median_literal_scan_ms": 3863.5,
+  "cases_with_truncated_candidates": 55,
+  "literal_scan_note": "Cost reference, not a like-for-like comparison: the scan matches each case's whole title as one case-sensitive substring in every verified projection, while the FTS5 query ranks any-term matches.",
+  "median_literal_matched_items": 2
+ },
+ "limits": "One machine, one run, OS caches not cleared, nothing else running. The query is the oldest open member's own title, so that member is always found; other_members_returned excludes it. Labels are hand-checked same-fix groups, not relevance grades for every returned item, so precision is not measured. Retrieval is not a duplicate decision.",
+ "cases": [
+  {
+   "id": "omarchy-9605-omarchy-windows-vm-clear-setgid-on-mount",
+   "expected": 7,
+   "returned": 5,
+   "missed": [
+    "pr:10411",
+    "pr:12264",
+    "pr:12323",
+    "pr:13154"
+   ],
+   "known_positive_recall": 0.429,
+   "warm_median_ms": 356.7,
+   "literal_scan_ms": 3862.9,
+   "output_bytes": 10401,
+   "candidates_truncated": true
+  },
+  {
+   "id": "omarchy-7074-remember-menu-position-when-navigating-b",
+   "expected": 8,
+   "returned": 5,
+   "missed": [
+    "pr:12098",
+    "pr:12644",
+    "pr:13012"
+   ],
+   "known_positive_recall": 0.625,
+   "warm_median_ms": 410.9,
+   "literal_scan_ms": 3811.2,
+   "output_bytes": 10867,
+   "candidates_truncated": true
+  },
+  {
+   "id": "omarchy-8879-enable-sunshine-by-its-real-unit-name",
+   "expected": 7,
+   "returned": 5,
+   "missed": [
+    "pr:12358",
+    "pr:13230"
+   ],
+   "known_positive_recall": 0.714,
+   "warm_median_ms": 251.3,
+   "literal_scan_ms": 3881.8,
+   "output_bytes": 11774,
+   "candidates_truncated": true
+  },
+  {
+   "id": "omarchy-7186-battery-status-across-all-packs",
+   "expected": 4,
+   "returned": 5,
+   "missed": [
+    "pr:12024"
+   ],
+   "known_positive_recall": 0.75,
+   "warm_median_ms": 280.4,
+   "literal_scan_ms": 3855.5,
+   "output_bytes": 11842,
+   "candidates_truncated": true
+  },
+  {
+   "id": "omarchy-7023-omarchy-toggle-bar-on-off-inverted",
+   "expected": 3,
+   "returned": 5,
+   "missed": [],
+   "known_positive_recall": 1.0,
+   "warm_median_ms": 393.6,
+   "literal_scan_ms": 3863.8,
+   "output_bytes": 11370,
+   "candidates_truncated": true
+  },
+  {
+   "id": "omarchy-6485-grok-usage-collector",
+   "expected": 3,
+   "returned": 6,
+   "missed": [],
+   "known_positive_recall": 1.0,
+   "warm_median_ms": 223.5,
+   "literal_scan_ms": 3802.6,
+   "output_bytes": 11883,
+   "candidates_truncated": true
+  },
+  {
+   "id": "omarchy-5774-vivaldi-browser-support",
+   "expected": 3,
+   "returned": 6,
+   "missed": [],
+   "known_positive_recall": 1.0,
+   "warm_median_ms": 227.9,
+   "literal_scan_ms": 3811.4,
+   "output_bytes": 11920,
+   "candidates_truncated": true
+  },
+  {
+   "id": "omarchy-7283-clipboard-shortcuts-on-non-latin-layouts",
+   "expected": 3,
+   "returned": 4,
+   "missed": [],
+   "known_positive_recall": 1.0,
+   "warm_median_ms": 241.4,
+   "literal_scan_ms": 3833.8,
+   "output_bytes": 10136,
+   "candidates_truncated": true
+  },
+  {
+   "id": "omarchy-6647-hermes-usage-collector",
+   "expected": 2,
+   "returned": 6,
+   "missed": [],
+   "known_positive_recall": 1.0,
+   "warm_median_ms": 313.6,
+   "literal_scan_ms": 3780.8,
+   "output_bytes": 11985,
+   "candidates_truncated": true
+  },
+  {
+   "id": "omarchy-7016-fuzzy-menu-search",
+   "expected": 2,
+   "returned": 5,
+   "missed": [],
+   "known_positive_recall": 1.0,
+   "warm_median_ms": 227.9,
+   "literal_scan_ms": 3832.4,
+   "output_bytes": 10312,
+   "candidates_truncated": true
+  },
+  {
+   "id": "omarchy-8065-opencode-go-usage-collector",
+   "expected": 2,
+   "returned": 5,
+   "missed": [],
+   "known_positive_recall": 1.0,
+   "warm_median_ms": 281.7,
+   "literal_scan_ms": 3845.5,
+   "output_bytes": 11286,
+   "candidates_truncated": true
+  },
+  {
+   "id": "omarchy-8479-antigravity-usage-collector-agy-vs-antig",
+   "expected": 2,
+   "returned": 4,
+   "missed": [],
+   "known_positive_recall": 1.0,
+   "warm_median_ms": 332.8,
+   "literal_scan_ms": 3809.9,
+   "output_bytes": 10239,
+   "candidates_truncated": true
+  },
+  {
+   "id": "omarchy-11415-dismiss-low-battery-warning-on-charge",
+   "expected": 2,
+   "returned": 5,
+   "missed": [],
+   "known_positive_recall": 1.0,
+   "warm_median_ms": 199.0,
+   "literal_scan_ms": 3829.7,
+   "output_bytes": 11768,
+   "candidates_truncated": true
+  },
+  {
+   "id": "omarchy-10476-calendar-grid-shifts-on-midnight-dst-swi",
+   "expected": 4,
+   "returned": 5,
+   "missed": [],
+   "known_positive_recall": 1.0,
+   "warm_median_ms": 219.9,
+   "literal_scan_ms": 3807.9,
+   "output_bytes": 10756,
+   "candidates_truncated": true
+  },
+  {
+   "id": "omarchy-8019-show-hide-toggle-for-the-wi-fi-passphras",
+   "expected": 4,
+   "returned": 5,
+   "missed": [
+    "pr:12925"
+   ],
+   "known_positive_recall": 0.75,
+   "warm_median_ms": 305.0,
+   "literal_scan_ms": 3803.3,
+   "output_bytes": 11241,
+   "candidates_truncated": true
+  },
+  {
+   "id": "omarchy-10364-keyboard-backlight-lost-after-repeated-b",
+   "expected": 4,
+   "returned": 5,
+   "missed": [
+    "pr:10366"
+   ],
+   "known_positive_recall": 0.75,
+   "warm_median_ms": 232.5,
+   "literal_scan_ms": 3811.7,
+   "output_bytes": 10400,
+   "candidates_truncated": true
+  },
+  {
+   "id": "omarchy-7592-lock-screen-password-focus-after-resume",
+   "expected": 3,
+   "returned": 4,
+   "missed": [
+    "pr:12435",
+    "pr:8560"
+   ],
+   "known_positive_recall": 0.333,
+   "warm_median_ms": 290.4,
+   "literal_scan_ms": 3854.3,
+   "output_bytes": 10039,
+   "candidates_truncated": true
+  },
+  {
+   "id": "omarchy-9168-kitty-bold-italic-faces-on-font-set",
+   "expected": 3,
+   "returned": 4,
+   "missed": [],
+   "known_positive_recall": 1.0,
+   "warm_median_ms": 397.4,
+   "literal_scan_ms": 3809.4,
+   "output_bytes": 9846,
+   "candidates_truncated": true
+  },
+  {
+   "id": "omarchy-10194-display-panel-toggle-under-the-lua-confi",
+   "expected": 3,
+   "returned": 5,
+   "missed": [],
+   "known_positive_recall": 1.0,
+   "warm_median_ms": 403.2,
+   "literal_scan_ms": 3823.1,
+   "output_bytes": 11385,
+   "candidates_truncated": true
+  },
+  {
+   "id": "omarchy-7723-keep-the-last-valid-shell-json",
+   "expected": 3,
+   "returned": 4,
+   "missed": [],
+   "known_positive_recall": 1.0,
+   "warm_median_ms": 529.7,
+   "literal_scan_ms": 3823.7,
+   "output_bytes": 10137,
+   "candidates_truncated": true
+  },
+  {
+   "id": "omarchy-12935-fontconfig-monospace-rule-as-a-conf-d-dr",
+   "expected": 3,
+   "returned": 5,
+   "missed": [],
+   "known_positive_recall": 1.0,
+   "warm_median_ms": 289.1,
+   "literal_scan_ms": 3838.2,
+   "output_bytes": 11358,
+   "candidates_truncated": true
+  },
+  {
+   "id": "omarchy-7564-keybindings-menu-lua-bind-scan",
+   "expected": 3,
+   "returned": 5,
+   "missed": [],
+   "known_positive_recall": 1.0,
+   "warm_median_ms": 434.0,
+   "literal_scan_ms": 3826.7,
+   "output_bytes": 11416,
+   "candidates_truncated": true
+  },
+  {
+   "id": "omarchy-7661-rank-apps-above-menu-actions-in-search",
+   "expected": 3,
+   "returned": 6,
+   "missed": [],
+   "known_positive_recall": 1.0,
+   "warm_median_ms": 290.5,
+   "literal_scan_ms": 3818.3,
+   "output_bytes": 11988,
+   "candidates_truncated": true
+  },
+  {
+   "id": "omarchy-8084-ssh-reconnect-leaving-the-alternate-scre",
+   "expected": 3,
+   "returned": 5,
+   "missed": [],
+   "known_positive_recall": 1.0,
+   "warm_median_ms": 497.6,
+   "literal_scan_ms": 3847.1,
+   "output_bytes": 11403,
+   "candidates_truncated": true
+  },
+  {
+   "id": "omarchy-7042-ctrl-n-ctrl-p-menu-navigation",
+   "expected": 2,
+   "returned": 5,
+   "missed": [
+    "pr:10934"
+   ],
+   "known_positive_recall": 0.5,
+   "warm_median_ms": 258.0,
+   "literal_scan_ms": 3905.4,
+   "output_bytes": 10759,
+   "candidates_truncated": true
+  },
+  {
+   "id": "omarchy-7680-lock-screen-password-reveal-toggle",
+   "expected": 2,
+   "returned": 5,
+   "missed": [],
+   "known_positive_recall": 1.0,
+   "warm_median_ms": 306.1,
+   "literal_scan_ms": 3863.5,
+   "output_bytes": 10335,
+   "candidates_truncated": true
+  },
+  {
+   "id": "omarchy-8824-orphan-prompt-under-omarchy-update-y",
+   "expected": 2,
+   "returned": 5,
+   "missed": [],
+   "known_positive_recall": 1.0,
+   "warm_median_ms": 257.5,
+   "literal_scan_ms": 3852.1,
+   "output_bytes": 11153,
+   "candidates_truncated": true
+  },
+  {
+   "id": "omarchy-8590-unset-omarchy-path-in-update-dev",
+   "expected": 2,
+   "returned": 4,
+   "missed": [
+    "pr:12860"
+   ],
+   "known_positive_recall": 0.5,
+   "warm_median_ms": 425.8,
+   "literal_scan_ms": 3855.8,
+   "output_bytes": 10011,
+   "candidates_truncated": true
+  },
+  {
+   "id": "omarchy-7783-same-lines-same-fix",
+   "expected": 2,
+   "returned": 5,
+   "missed": [],
+   "known_positive_recall": 1.0,
+   "warm_median_ms": 352.9,
+   "literal_scan_ms": 3895.7,
+   "output_bytes": 11834,
+   "candidates_truncated": true
+  },
+  {
+   "id": "omarchy-11069-same-lines-same-fix",
+   "expected": 2,
+   "returned": 5,
+   "missed": [],
+   "known_positive_recall": 1.0,
+   "warm_median_ms": 353.7,
+   "literal_scan_ms": 3896.5,
+   "output_bytes": 11760,
+   "candidates_truncated": true
+  },
+  {
+   "id": "omarchy-8429-same-lines-same-fix",
+   "expected": 2,
+   "returned": 5,
+   "missed": [],
+   "known_positive_recall": 1.0,
+   "warm_median_ms": 354.7,
+   "literal_scan_ms": 3909.4,
+   "output_bytes": 11453,
+   "candidates_truncated": true
+  },
+  {
+   "id": "omarchy-10413-same-lines-same-fix",
+   "expected": 2,
+   "returned": 5,
+   "missed": [],
+   "known_positive_recall": 1.0,
+   "warm_median_ms": 498.8,
+   "literal_scan_ms": 3898.5,
+   "output_bytes": 11419,
+   "candidates_truncated": true
+  },
+  {
+   "id": "omarchy-13041-same-lines-same-fix",
+   "expected": 2,
+   "returned": 4,
+   "missed": [],
+   "known_positive_recall": 1.0,
+   "warm_median_ms": 174.6,
+   "literal_scan_ms": 3929.3,
+   "output_bytes": 10112,
+   "candidates_truncated": true
+  },
+  {
+   "id": "omarchy-13044-same-lines-same-fix",
+   "expected": 2,
+   "returned": 4,
+   "missed": [],
+   "known_positive_recall": 1.0,
+   "warm_median_ms": 460.8,
+   "literal_scan_ms": 3897.6,
+   "output_bytes": 10230,
+   "candidates_truncated": true
+  },
+  {
+   "id": "omarchy-8875-same-lines-same-fix",
+   "expected": 2,
+   "returned": 5,
+   "missed": [],
+   "known_positive_recall": 1.0,
+   "warm_median_ms": 394.3,
+   "literal_scan_ms": 3847.1,
+   "output_bytes": 11542,
+   "candidates_truncated": true
+  },
+  {
+   "id": "omarchy-11235-same-lines-same-fix",
+   "expected": 2,
+   "returned": 5,
+   "missed": [],
+   "known_positive_recall": 1.0,
+   "warm_median_ms": 352.9,
+   "literal_scan_ms": 3866.6,
+   "output_bytes": 11809,
+   "candidates_truncated": true
+  },
+  {
+   "id": "omarchy-11344-same-lines-same-fix",
+   "expected": 2,
+   "returned": 5,
+   "missed": [],
+   "known_positive_recall": 1.0,
+   "warm_median_ms": 232.4,
+   "literal_scan_ms": 3929.8,
+   "output_bytes": 11946,
+   "candidates_truncated": true
+  },
+  {
+   "id": "omarchy-11364-same-lines-same-fix",
+   "expected": 2,
+   "returned": 5,
+   "missed": [],
+   "known_positive_recall": 1.0,
+   "warm_median_ms": 383.2,
+   "literal_scan_ms": 3916.3,
+   "output_bytes": 11751,
+   "candidates_truncated": true
+  },
+  {
+   "id": "omarchy-11893-same-lines-same-fix",
+   "expected": 2,
+   "returned": 5,
+   "missed": [],
+   "known_positive_recall": 1.0,
+   "warm_median_ms": 316.4,
+   "literal_scan_ms": 3847.2,
+   "output_bytes": 11713,
+   "candidates_truncated": true
+  },
+  {
+   "id": "omarchy-11918-same-lines-same-fix",
+   "expected": 2,
+   "returned": 5,
+   "missed": [],
+   "known_positive_recall": 1.0,
+   "warm_median_ms": 318.2,
+   "literal_scan_ms": 3896.8,
+   "output_bytes": 10884,
+   "candidates_truncated": true
+  },
+  {
+   "id": "omarchy-11273-same-lines-same-fix",
+   "expected": 2,
+   "returned": 5,
+   "missed": [],
+   "known_positive_recall": 1.0,
+   "warm_median_ms": 320.8,
+   "literal_scan_ms": 3895.4,
+   "output_bytes": 11824,
+   "candidates_truncated": true
+  },
+  {
+   "id": "omarchy-12585-same-lines-same-fix",
+   "expected": 2,
+   "returned": 5,
+   "missed": [],
+   "known_positive_recall": 1.0,
+   "warm_median_ms": 329.0,
+   "literal_scan_ms": 3906.0,
+   "output_bytes": 11884,
+   "candidates_truncated": true
+  },
+  {
+   "id": "omarchy-10749-same-lines-same-fix",
+   "expected": 2,
+   "returned": 5,
+   "missed": [],
+   "known_positive_recall": 1.0,
+   "warm_median_ms": 415.8,
+   "literal_scan_ms": 3906.0,
+   "output_bytes": 11880,
+   "candidates_truncated": true
+  },
+  {
+   "id": "omarchy-12649-same-lines-same-fix",
+   "expected": 2,
+   "returned": 4,
+   "missed": [],
+   "known_positive_recall": 1.0,
+   "warm_median_ms": 374.4,
+   "literal_scan_ms": 3856.3,
+   "output_bytes": 10111,
+   "candidates_truncated": true
+  },
+  {
+   "id": "omarchy-11565-same-lines-same-fix",
+   "expected": 2,
+   "returned": 5,
+   "missed": [],
+   "known_positive_recall": 1.0,
+   "warm_median_ms": 314.5,
+   "literal_scan_ms": 3867.7,
+   "output_bytes": 11891,
+   "candidates_truncated": true
+  },
+  {
+   "id": "omarchy-11933-same-lines-same-fix",
+   "expected": 2,
+   "returned": 4,
+   "missed": [],
+   "known_positive_recall": 1.0,
+   "warm_median_ms": 370.6,
+   "literal_scan_ms": 3885.0,
+   "output_bytes": 10192,
+   "candidates_truncated": true
+  },
+  {
+   "id": "omarchy-10159-same-lines-same-fix",
+   "expected": 2,
+   "returned": 5,
+   "missed": [],
+   "known_positive_recall": 1.0,
+   "warm_median_ms": 318.5,
+   "literal_scan_ms": 3872.9,
+   "output_bytes": 11823,
+   "candidates_truncated": true
+  },
+  {
+   "id": "omarchy-9847-same-lines-same-fix",
+   "expected": 2,
+   "returned": 5,
+   "missed": [],
+   "known_positive_recall": 1.0,
+   "warm_median_ms": 349.3,
+   "literal_scan_ms": 3875.7,
+   "output_bytes": 11800,
+   "candidates_truncated": true
+  },
+  {
+   "id": "omarchy-8692-same-lines-same-fix",
+   "expected": 2,
+   "returned": 5,
+   "missed": [],
+   "known_positive_recall": 1.0,
+   "warm_median_ms": 249.6,
+   "literal_scan_ms": 3896.7,
+   "output_bytes": 11269,
+   "candidates_truncated": true
+  },
+  {
+   "id": "omarchy-8414-same-lines-same-fix",
+   "expected": 2,
+   "returned": 6,
+   "missed": [],
+   "known_positive_recall": 1.0,
+   "warm_median_ms": 167.0,
+   "literal_scan_ms": 3960.6,
+   "output_bytes": 11994,
+   "candidates_truncated": true
+  },
+  {
+   "id": "omarchy-10877-same-lines-same-fix",
+   "expected": 2,
+   "returned": 5,
+   "missed": [],
+   "known_positive_recall": 1.0,
+   "warm_median_ms": 255.2,
+   "literal_scan_ms": 3867.6,
+   "output_bytes": 11365,
+   "candidates_truncated": true
+  },
+  {
+   "id": "omarchy-8406-same-lines-same-fix",
+   "expected": 2,
+   "returned": 4,
+   "missed": [],
+   "known_positive_recall": 1.0,
+   "warm_median_ms": 390.9,
+   "literal_scan_ms": 3867.6,
+   "output_bytes": 10139,
+   "candidates_truncated": true
+  },
+  {
+   "id": "omarchy-11728-same-lines-same-fix",
+   "expected": 2,
+   "returned": 5,
+   "missed": [],
+   "known_positive_recall": 1.0,
+   "warm_median_ms": 284.9,
+   "literal_scan_ms": 3885.1,
+   "output_bytes": 11551,
+   "candidates_truncated": true
+  },
+  {
+   "id": "omarchy-8023-same-lines-same-fix",
+   "expected": 2,
+   "returned": 5,
+   "missed": [],
+   "known_positive_recall": 1.0,
+   "warm_median_ms": 320.4,
+   "literal_scan_ms": 3893.5,
+   "output_bytes": 11313,
+   "candidates_truncated": true
+  },
+  {
+   "id": "omarchy-7833-same-lines-same-fix",
+   "expected": 2,
+   "returned": 5,
+   "missed": [],
+   "known_positive_recall": 1.0,
+   "warm_median_ms": 390.2,
+   "literal_scan_ms": 3888.6,
+   "output_bytes": 10874,
+   "candidates_truncated": true
+  }
+ ]
+}
