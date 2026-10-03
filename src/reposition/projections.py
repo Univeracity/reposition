@@ -219,7 +219,7 @@ def project(
             row.get("data") if component == "checks" and isinstance(row.get("data"), dict) else row
         )
         record_id = source_row.get("node_id", source_row.get("id"))
-        if not isinstance(record_id, (str, int)) or isinstance(record_id, bool):
+        if not isinstance(record_id, str | int) or isinstance(record_id, bool):
             record_id = None
         filename = row.get("filename", row.get("path"))
         if not isinstance(filename, str):

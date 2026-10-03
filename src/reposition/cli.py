@@ -121,6 +121,15 @@ def parser() -> argparse.ArgumentParser:
     cache_retrieve.add_argument(
         "--checkpoint", required=True, help="index checkpoint from discovery"
     )
+    cache_info.add_argument(
+        "--snapshot-ids-limit",
+        type=int,
+        default=0,
+        help="include up to 100 indexed snapshot IDs; default returns only their count",
+    )
+    cache_info.add_argument(
+        "--snapshot-ids-offset", type=int, default=0, help="starting offset for snapshot IDs"
+    )
     cache_retrieve.add_argument(
         "--byte-offset",
         type=int,
@@ -226,7 +235,13 @@ def main(argv: list[str] | None = None) -> int:
                             byte_offset=args.byte_offset,
                         )
                     else:
-                        output = index.info(source, snapshot=args.snapshot, corpus=args.corpus)
+                        output = index.info(
+                            source,
+                            snapshot=args.snapshot,
+                            corpus=args.corpus,
+                            snapshot_ids_limit=args.snapshot_ids_limit,
+                            snapshot_ids_offset=args.snapshot_ids_offset,
+                        )
             sys.stdout.write(encode_response(output))
             return 0
         if args.command == "index":

@@ -61,6 +61,13 @@ match the indexed selection, even with an explicit `--db`. Without a scope,
 metadata only: it does not verify source checkpoints or payloads, and remains
 usable for inspecting a stale index before rebuilding. Its JSON explicitly
 marks both source-verification flags false; it is not a freshness claim.
+The `reposition.cache-info.v2` response gives `indexed_snapshot_count` and
+omits `indexed_snapshots` by default. Consumers of the v1 full list must opt
+into pagination. Use `--snapshot-ids-limit N` (maximum 100) to request IDs in
+sorted order, and pass the returned
+`indexed_snapshots_next_offset` as `--snapshot-ids-offset` for the next page.
+A null next offset means the list is complete. The manifest still retains the
+complete checksummed set of IDs.
 
 ## Scope and authority
 
