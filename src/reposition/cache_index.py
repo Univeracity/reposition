@@ -1062,19 +1062,41 @@ class CacheIndex:
         self._scope(source, snapshot, corpus)
         return output
 
-    def info(self, source: TriageCache, *, snapshot: str | None = None, corpus: str | None = None):
+    def info(
+        self,
+        source: TriageCache,
+        *,
+        snapshot: str | None = None,
+        corpus: str | None = None,
+        snapshot_ids_limit: int = 0,
+        snapshot_ids_offset: int = 0,
+    ):
         """Inspect identity-bound index metadata without auditing source payloads or freshness."""
+        _limit(snapshot_ids_limit, "snapshot_ids_limit", 100, 0)
+        _limit(snapshot_ids_offset, "snapshot_ids_offset", 2**63 - 1, 0)
+        if snapshot_ids_offset and not snapshot_ids_limit:
+            raise ValueError("snapshot_ids_offset requires snapshot_ids_limit")
         self._identity(source)
         if snapshot is not None or corpus is not None:
             self._selection(snapshot, corpus)
-        return {
-            "schema": "reposition.cache-info.v1",
-            **self.manifest,
+        snapshots = self.manifest["indexed_snapshots"]
+        page_end = min(len(snapshots), snapshot_ids_offset + snapshot_ids_limit)
+        result = {
+            "schema": "reposition.cache-info.v2",
+            **{key: value for key, value in self.manifest.items() if key != "indexed_snapshots"},
+            "indexed_snapshot_count": len(snapshots),
             "index_bytes": self.path.stat().st_size,
             "source_checkpoint_verified": False,
             "source_payloads_verified": False,
             "requests": 0,
         }
+        if snapshot_ids_limit:
+            result.update(
+                indexed_snapshots=snapshots[snapshot_ids_offset:page_end],
+                indexed_snapshots_offset=snapshot_ids_offset,
+                indexed_snapshots_next_offset=page_end if page_end < len(snapshots) else None,
+            )
+        return result
 
     def close(self):
         self.connection.close()

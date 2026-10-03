@@ -290,7 +290,11 @@ class CacheTests(unittest.TestCase):
         with contextlib.redirect_stdout(io.StringIO()) as output:
             self.assertEqual(main(arguments), 0)
         info = json.loads(output.getvalue())
+        self.assertEqual(info["schema"], "reposition.cache-info.v2")
         self.assertEqual(info["repository"], self.manifest["repository"])
+        self.assertEqual(info["indexed_snapshot_count"], 1)
+        self.assertNotIn("indexed_snapshots", info)
+        self.assertNotIn("indexed_snapshots_next_offset", info)
         self.assertFalse(info["source_checkpoint_verified"])
         self.assertFalse(info["source_payloads_verified"])
         with contextlib.redirect_stderr(io.StringIO()):
@@ -314,6 +318,52 @@ class CacheTests(unittest.TestCase):
                 foreign["repository"].update(changes)
                 (self.root / "cache.json").write_text(canonical(foreign))
                 self.assertEqual(main(arguments), 2)
+
+    def test_metadata_snapshot_ids_are_bounded_and_paginated(self):
+        snapshots = [f"{number:064x}" for number in range(4932)]
+        with sqlite3.connect(self.database) as connection:
+            manifest = json.loads(connection.execute("SELECT data FROM manifest").fetchone()[0])
+            manifest.pop("checksum")
+            manifest["indexed_snapshots"] = snapshots
+            manifest["checksum"] = sha256(canonical(manifest))
+            connection.execute("UPDATE manifest SET data=?", (canonical(manifest),))
+
+        arguments = ["cache-info", "--cache", str(self.root), "--db", str(self.database)]
+
+        def inspect(*flags):
+            with contextlib.redirect_stdout(io.StringIO()) as output:
+                self.assertEqual(main([*arguments, *flags]), 0)
+            return json.loads(output.getvalue()), len(output.getvalue().encode("utf-8"))
+
+        default, size = inspect()
+        self.assertEqual(default["indexed_snapshot_count"], len(snapshots))
+        self.assertNotIn("indexed_snapshots", default)
+        self.assertNotIn("indexed_snapshots_next_offset", default)
+        self.assertLess(size, 10000)
+
+        first, size = inspect("--snapshot-ids-limit", "100")
+        self.assertEqual(first["indexed_snapshots"], snapshots[:100])
+        self.assertEqual(first["indexed_snapshots_next_offset"], 100)
+        self.assertLess(size, 20000)
+
+        second, _ = inspect(
+            "--snapshot-ids-limit", "100", "--snapshot-ids-offset", str(first["indexed_snapshots_next_offset"])
+        )
+        self.assertEqual(second["indexed_snapshots"], snapshots[100:200])
+        self.assertEqual(second["indexed_snapshots_next_offset"], 200)
+
+        last, _ = inspect("--snapshot-ids-limit", "100", "--snapshot-ids-offset", "4900")
+        self.assertEqual(last["indexed_snapshots"], snapshots[4900:])
+        self.assertIsNone(last["indexed_snapshots_next_offset"])
+
+        for flags in (
+            ("--snapshot-ids-limit", "101"),
+            ("--snapshot-ids-limit", "-1"),
+            ("--snapshot-ids-offset", "1"),
+            ("--snapshot-ids-limit", "10", "--snapshot-ids-offset", "-1"),
+        ):
+            with self.subTest(flags=flags), contextlib.redirect_stderr(io.StringIO()):
+                self.assertEqual(main([*arguments, *flags]), 2)
 
     def test_failed_build_keeps_previous_index_and_cleans_temporaries(self):
         before = self.database.read_bytes()
