@@ -50,7 +50,7 @@ comment, field or diff region. Its default starts at the matched unit; an explic
 `--byte-offset 0` starts at that source boundary. Follow a fragment's returned
 `continuation` parameters to read further without changing source selection.
 
-An optional [triage-o-mator bridge](../integrations/triage-o-mator/README.md)
+The optional [triage-o-mator maintained bridge](../integrations/triage-o-mator/README.md)
 provides `bin/cache search-index`, `query`, `retrieve` and `search-info`, while
 preserving existing literal search and readers when Reposition is absent.
 
@@ -61,6 +61,16 @@ match the indexed selection, even with an explicit `--db`. Without a scope,
 metadata only: it does not verify source checkpoints or payloads, and remains
 usable for inspecting a stale index before rebuilding. Its JSON explicitly
 marks both source-verification flags false; it is not a freshness claim.
+The `reposition.cache-info.v2` response gives `indexed_snapshot_count` and
+omits `indexed_snapshots` by default. Consumers of the v1 full list must opt
+into pagination. Use `--snapshot-ids-limit N` (maximum 100) to request IDs in
+sorted order, and pass the returned
+`indexed_snapshots_next_offset` as `--snapshot-ids-offset` for the next page,
+with the first page's manifest `checksum` as `--checkpoint`. Nonzero offsets
+require this checkpoint; any supplied checkpoint must match the current manifest
+checksum. Replacement therefore rejects continuation from an older index.
+A null next offset means the list is complete. The manifest still retains the
+complete checksummed set of IDs.
 
 ## Scope and authority
 
@@ -102,6 +112,7 @@ Projection version 1 retains original string slices:
 | `checks` | Check run/suite/status names, output, status, conclusion and kind |
 | `closing_issues` | One explicit relationship URL |
 | `timeline` | One event, body or available linked-issue field |
+| `ci_logs` | Separately captured native CI failure-log segments and retained check/workflow/job names |
 
 Long fields/regions split at deterministic UTF-8 byte and line ceilings, with
 small overlap. Defaults: 4,096 bytes, 200 lines and 128 bytes overlap. Chunk policy
@@ -114,6 +125,62 @@ bytes **within that value**, not positions in the serialized JSON object. Raw
 diff offsets count UTF-8 bytes in the object itself. All ranges are half-open.
 Locators retain source record IDs where available, filename, line range, original
 field size and comment/hunk boundary. Hashes cover exact original UTF-8 slices.
+
+## Separately captured CI failure logs
+
+Default builds also discover currently saved native `ci-failure-log` captures for
+verified failed checks of the exact selected PR snapshots. Use `--component
+ci_logs` to index only these captures. An explicit ordinary component selection,
+such as `--component summary`, skips CI association discovery. No logs are fetched,
+no install code is imported, and no source cache files are changed.
+
+This is a separate searchable component, outside snapshot component completeness.
+The adapter verifies the selected summary and typed checks, derives each exact
+native `ci-logs` pointer path, and freezes its bytes and immutable packet reference
+before indexing. There is no directory scan or latest/historical fallback. The
+build rechecks the selected pointer bytes before publication; drift refuses the
+replacement and preserves the old index. Later pointer replacement or deletion
+does not change an existing index's frozen selection. Rebuild explicitly to adopt
+new captures. Packet references live in SQLite source bindings, not a potentially
+large metadata response. Metadata reports the bounded selection digest and counts.
+
+`--max-ci-logs` defaults to 1,000 (maximum 10,000). It bounds inspected PRs,
+eligible check/pointer lookups and captured packets. Capped members/checks, missing
+associations, unsupported providers, unavailable or partial source metadata,
+unavailable/partial captures, packet omissions and non-UTF-8 segments remain visible in aggregate
+coverage. Unverifiable legacy checks are unavailable for CI discovery; they remain
+eligible for ordinary snapshot-component search. The discovery pass has a separate
+128 MiB unique source-object read ceiling and respects per-object limits.
+
+Query and retrieve use only frozen immutable packet references. Each returned
+capture revalidates its packet hash and size, capture and selected snapshots,
+summary identities, raw typed checks and suites, head, check source object/index,
+check name, workflow run/attempt, job, attempt membership and segment bounds.
+A capture from another metadata snapshot is accepted only with revalidated binding
+and exact equality of PR identity/head and complete raw check and suite data;
+both snapshot IDs remain in fragment metadata. Checksums verify retained content,
+not the authenticity of external provenance or current GitHub state.
+
+Raw base64 segment bytes must decode as strict UTF-8 to be searchable. ANSI
+escapes are masked with spaces for FTS matching and excerpt placement, so
+colored words remain discoverable within short excerpts. Stored projections and cited
+excerpts preserve original ANSI/control characters, hashes and offsets; no
+normalized search-text offsets are presented as source coordinates. Unsupported non-UTF-8 segments are counted and omitted. Segment
+locators use `ci-segment-utf8`, with offsets relative to the retained segment,
+original job-log byte/line ranges and segment index. Byte ranges are half-open;
+`original_start_line`/`original_end_line` preserve the native inclusive line range.
+Excerpts also expose original job-log byte offsets. Hashes cover the exact decoded UTF-8 source slice. Name
+fields use the existing decoded JSON string coordinate space. The immutable
+packet SHA-256 URI and structural locator identify the retained raw source.
+Progressive reads stay inside one retained segment and never bridge omitted lines.
+CI fragment metadata retains provider, source repository, status, head,
+check/workflow/job names and IDs, run attempt, partial/revalidation flags and
+omissions. Partial capture, unvalidated binding and omitted regions remain separate
+from snapshot coverage and action approval.
+
+The request verification ceiling includes unique packet, checks and summary
+object bytes, including both snapshots' source dependencies when reused. Whole
+response, projection, unit and index-storage ceilings apply to these fragments too.
 
 ## Query and output policy
 

@@ -65,12 +65,14 @@ evidence, not automated duplicate decisions or calibrated confidence scores.
 The `cache-index`, `cache-query` and `cache-retrieve` commands work directly with
 triage-o-mator's immutable evidence cache. They provide component-aware ranked
 fragments, exact snapshot/corpus selection, source verification and progressive
-reads across all nine components. The complete JSON response has an enforceable
+reads across all nine snapshot components and separately saved CI failure-log
+segments (`ci_logs`). CI captures keep their raw segment ranges and exact check,
+run and attempt bindings; they do not establish complete job-log coverage. The complete JSON response has an enforceable
 UTF-8 byte budget. Derived indexes live beside the acquisition cache and have
 their own storage ceiling.
 
 See the [workflow and contracts](docs/cache-integration.md), including resource
-limits and an optional `bin/cache` integration patch. This API
+limits and the maintained triage-o-mator `bin/cache` bridge. This API
 keeps acquisition and approvals with the caller; real-cache and independent
 review evaluation remain the next qualification steps.
 

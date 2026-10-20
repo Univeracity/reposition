@@ -20,6 +20,12 @@ Copyright (c) 2026 EFrMG; MIT License. The permission notice is retained in
 licenses/triage-o-mator-MIT.txt. The adapter removes install-specific imports;
 it does not acquire evidence or import triage decisions.
 
+The native CI log adapter in src/reposition/ci_logs.py also adapts offline
+validation from triage-o-mator bin/_ci_logs.py, bin/_checks.py and
+bin/_acquire.py, Copyright (c) 2026 EFrMG, under the same retained MIT license.
+It removes acquisition and install imports and adds frozen bounded associations
+and raw UTF-8 segment projections.
+
 Supporting text in the README header and social preview graphics uses DejaVu
 Sans glyph outlines. Copyright (c) 2003 Bitstream, Inc. All Rights Reserved.
 Bitstream Vera is a trademark of Bitstream, Inc. DejaVu changes are in the

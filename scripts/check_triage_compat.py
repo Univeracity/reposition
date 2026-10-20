@@ -16,7 +16,10 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 
 
-def check(checkout):
+def check(checkout, *, pre_index_state="missing-package"):
+    if pre_index_state not in {"missing-package", "missing-index"}:
+        raise ValueError("unsupported pre-index state")
+
     with tempfile.TemporaryDirectory(prefix="reposition-triage-") as directory:
         temp = Path(directory)
         install = temp / "install"
@@ -78,7 +81,10 @@ cache.publish(manifest,payloads)
 corpus=create(cache,manifest['snapshot_id'],scope='open-items',profile='backlog')['corpus_id']
 state=json.loads((raw/'corpora'/(corpus+'.state.json')).read_text());state.pop('checksum')
 write_record(cache,path(cache,corpus,'.state.json'),state)
-print(json.dumps({'snapshot':manifest['snapshot_id'],'corpus':corpus,'cache':str(cache.root)}))
+checks_corpus=create(cache,manifest['snapshot_id'],scope='open-items',profile='pr-checks')['corpus_id']
+checks_state=dict(state,plan_id=checks_corpus)
+write_record(cache,path(cache,checks_corpus,'.state.json'),checks_state)
+print(json.dumps({'snapshot':manifest['snapshot_id'],'corpus':corpus,'checks_corpus':checks_corpus,'cache':str(cache.root)}))
 """
         published = json.loads(run(["-c", publisher, str(raw), manifest["snapshot_id"]]).stdout)
         cache = Path(published["cache"])
@@ -111,15 +117,28 @@ print(json.dumps({'snapshot':manifest['snapshot_id'],'corpus':corpus,'cache':str
         missing = run(
             [*command, "query", "--corpus", published["corpus"], "--query", "terminal"],
             expected=2,
-            no_site=True,
+            no_site=pre_index_state == "missing-package",
         )
-        if "Reposition 0.2" not in missing.stderr:
-            raise RuntimeError("optional dependency error is not actionable")
+        if pre_index_state == "missing-package":
+            if "Reposition 0.2" not in missing.stderr:
+                raise RuntimeError("optional dependency error is not actionable")
+        elif "cache index unavailable; run reposition cache-index" not in missing.stderr:
+            raise RuntimeError("pre-index query did not report the missing index")
         build = json.loads(run([*command, "search-index", "--corpus", published["corpus"]]).stdout)
         from reposition import TriageCache
         from reposition.models import canonical, sha256
 
-        database = TriageCache(cache).index_path(corpus=published["corpus"])
+        checks_source = TriageCache(cache)
+        run([*command, "search-index", "--corpus", published["checks_corpus"]])
+        checks_query = json.loads(
+            run([
+                *command, "query", "--corpus", published["checks_corpus"],
+                "--component", "checks", "--query", "terminal",
+            ]).stdout
+        )
+        if not checks_query["items"]:
+            raise RuntimeError("owner-created pr-checks corpus did not return check evidence")
+        database = checks_source.index_path(corpus=published["corpus"])
         info_command = [*command, "search-info", "--db", str(database)]
         info = json.loads(run([*info_command, "--corpus", published["corpus"]]).stdout)
         if info["source_checkpoint_verified"] or info["source_payloads_verified"]:
@@ -242,7 +261,13 @@ print(json.dumps({'snapshot':manifest['snapshot_id'],'corpus':corpus,'cache':str
             "passed": True,
             "upstream_published_objects_and_corpus": True,
             "legacy_search_without_reposition": True,
-            "missing_optional_package_actionable": True,
+            "pre_index_state": pre_index_state,
+            **(
+                {"missing_optional_package_actionable": True}
+                if pre_index_state == "missing-package"
+                else {"missing_index_reported": True}
+            ),
+            "owner_created_pr_checks_corpus_readable": True,
             "install_identity_and_cache_override_guards": True,
             "search_info_identity_and_scope_guards": True,
             "search_info_is_metadata_only": True,
@@ -265,9 +290,13 @@ def main():
         required=True,
         help="trusted checkout with the proposed cache bridge applied",
     )
+    parser.add_argument(
+        "--pre-index-state", choices=("missing-package", "missing-index"),
+        default="missing-package", help="expected failure before building the derived index",
+    )
     parser.add_argument("--output", type=Path)
     args = parser.parse_args()
-    receipt = check(args.checkout.resolve())
+    receipt = check(args.checkout.resolve(), pre_index_state=args.pre_index_state)
     serialized = json.dumps(receipt, indent=2) + "\n"
     if args.output:
         args.output.parent.mkdir(parents=True, exist_ok=True)

@@ -8,7 +8,7 @@ from .models import Hit, Record, SearchResult, Snapshot
 from .projections import ProjectionPolicy
 from .render import Evidence, render
 
-__version__ = "0.2.0.dev1"
+__version__ = "0.2.0.dev2+triage.2"
 __all__ = [
     "CacheIndex",
     "Evidence",

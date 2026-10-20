@@ -17,6 +17,7 @@ PROFILES = {
     "closure-watch": {"summary", "comments", "timeline"},
     "discussion": {"summary", "comments"},
     "pr-context": {"summary", "comments", "files", "reviews", "review_comments"},
+    "pr-checks": {"summary", "checks"},
     "pr-code": {"summary", "comments", "files", "diff"},
     "pr-comparison": contract.COMPONENTS - {"timeline"},
 }

@@ -95,6 +95,7 @@ def parser() -> argparse.ArgumentParser:
     cache_index.add_argument("--chunk-lines", type=int, default=200)
     cache_index.add_argument("--max-index-bytes", type=int, default=512 * 1024 * 1024)
     cache_index.add_argument("--max-units", type=int, default=1_000_000)
+    cache_index.add_argument("--max-ci-logs", type=int, default=1000)
     cache_query.add_argument("--query", required=True)
     cache_query.add_argument("--component", action="append")
     cache_query.add_argument("--field", action="append")
@@ -120,6 +121,16 @@ def parser() -> argparse.ArgumentParser:
     )
     cache_retrieve.add_argument(
         "--checkpoint", required=True, help="index checkpoint from discovery"
+    )
+    cache_info.add_argument("--checkpoint", help="manifest checksum from the first metadata page")
+    cache_info.add_argument(
+        "--snapshot-ids-limit",
+        type=int,
+        default=0,
+        help="include up to 100 indexed snapshot IDs; default returns only their count",
+    )
+    cache_info.add_argument(
+        "--snapshot-ids-offset", type=int, default=0, help="starting offset for snapshot IDs"
     )
     cache_retrieve.add_argument(
         "--byte-offset",
@@ -182,6 +193,7 @@ def main(argv: list[str] | None = None) -> int:
                     policy=ProjectionPolicy(args.chunk_bytes, args.overlap_bytes, args.chunk_lines),
                     max_index_bytes=args.max_index_bytes,
                     max_units=args.max_units,
+                    max_ci_logs=args.max_ci_logs,
                     replace=args.replace,
                     recover=args.rebuild,
                 )
@@ -226,7 +238,14 @@ def main(argv: list[str] | None = None) -> int:
                             byte_offset=args.byte_offset,
                         )
                     else:
-                        output = index.info(source, snapshot=args.snapshot, corpus=args.corpus)
+                        output = index.info(
+                            source,
+                            snapshot=args.snapshot,
+                            corpus=args.corpus,
+                            snapshot_ids_limit=args.snapshot_ids_limit,
+                            snapshot_ids_offset=args.snapshot_ids_offset,
+                            checkpoint=args.checkpoint,
+                        )
             sys.stdout.write(encode_response(output))
             return 0
         if args.command == "index":

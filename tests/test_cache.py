@@ -290,7 +290,11 @@ class CacheTests(unittest.TestCase):
         with contextlib.redirect_stdout(io.StringIO()) as output:
             self.assertEqual(main(arguments), 0)
         info = json.loads(output.getvalue())
+        self.assertEqual(info["schema"], "reposition.cache-info.v2")
         self.assertEqual(info["repository"], self.manifest["repository"])
+        self.assertEqual(info["indexed_snapshot_count"], 1)
+        self.assertNotIn("indexed_snapshots", info)
+        self.assertNotIn("indexed_snapshots_next_offset", info)
         self.assertFalse(info["source_checkpoint_verified"])
         self.assertFalse(info["source_payloads_verified"])
         with contextlib.redirect_stderr(io.StringIO()):
@@ -314,6 +318,89 @@ class CacheTests(unittest.TestCase):
                 foreign["repository"].update(changes)
                 (self.root / "cache.json").write_text(canonical(foreign))
                 self.assertEqual(main(arguments), 2)
+
+    def test_metadata_snapshot_ids_are_bounded_and_paginated(self):
+        snapshots = [f"{number:064x}" for number in range(4932)]
+        with sqlite3.connect(self.database) as connection:
+            manifest = json.loads(connection.execute("SELECT data FROM manifest").fetchone()[0])
+            manifest.pop("checksum")
+            manifest["indexed_snapshots"] = snapshots
+            manifest["checksum"] = sha256(canonical(manifest))
+            connection.execute("UPDATE manifest SET data=?", (canonical(manifest),))
+
+        arguments = ["cache-info", "--cache", str(self.root), "--db", str(self.database)]
+
+        def inspect(*flags):
+            with contextlib.redirect_stdout(io.StringIO()) as output:
+                self.assertEqual(main([*arguments, *flags]), 0)
+            return json.loads(output.getvalue()), len(output.getvalue().encode("utf-8"))
+
+        default, size = inspect()
+        self.assertEqual(default["indexed_snapshot_count"], len(snapshots))
+        self.assertNotIn("indexed_snapshots", default)
+        self.assertNotIn("indexed_snapshots_next_offset", default)
+        self.assertLess(size, 10000)
+
+        first, size = inspect("--snapshot-ids-limit", "100")
+        self.assertEqual(first["indexed_snapshots"], snapshots[:100])
+        self.assertEqual(first["indexed_snapshots_next_offset"], 100)
+        self.assertLess(size, 20000)
+
+        second, _ = inspect(
+            "--snapshot-ids-limit",
+            "100",
+            "--snapshot-ids-offset",
+            str(first["indexed_snapshots_next_offset"]),
+            "--checkpoint",
+            first["checksum"],
+        )
+        self.assertEqual(second["indexed_snapshots"], snapshots[100:200])
+        self.assertEqual(second["indexed_snapshots_next_offset"], 200)
+
+        last, _ = inspect(
+            "--snapshot-ids-limit",
+            "100",
+            "--snapshot-ids-offset",
+            "4900",
+            "--checkpoint",
+            first["checksum"],
+        )
+        self.assertEqual(last["indexed_snapshots"], snapshots[4900:])
+        self.assertIsNone(last["indexed_snapshots_next_offset"])
+
+        for flags in (
+            ("--snapshot-ids-limit", "10", "--snapshot-ids-offset", "1"),
+            ("--checkpoint", "0" * 64),
+            ("--snapshot-ids-limit", "101"),
+            ("--snapshot-ids-limit", "-1"),
+            ("--snapshot-ids-offset", "1"),
+            ("--snapshot-ids-limit", "10", "--snapshot-ids-offset", "-1"),
+        ):
+            with self.subTest(flags=flags), contextlib.redirect_stderr(io.StringIO()):
+                self.assertEqual(main([*arguments, *flags]), 2)
+
+        with sqlite3.connect(self.database) as connection:
+            manifest.pop("checksum")
+            manifest["indexed_snapshots"] = snapshots[:100]
+            manifest["checksum"] = sha256(canonical(manifest))
+            connection.execute("UPDATE manifest SET data=?", (canonical(manifest),))
+
+        with contextlib.redirect_stderr(io.StringIO()) as error:
+            self.assertEqual(
+                main(
+                    [
+                        *arguments,
+                        "--snapshot-ids-limit",
+                        "100",
+                        "--snapshot-ids-offset",
+                        "100",
+                        "--checkpoint",
+                        first["checksum"],
+                    ]
+                ),
+                2,
+            )
+        self.assertIn("checkpoint changed", error.getvalue())
 
     def test_failed_build_keeps_previous_index_and_cleans_temporaries(self):
         before = self.database.read_bytes()
@@ -354,6 +441,26 @@ class CacheTests(unittest.TestCase):
             )
 
     def test_corpus_membership_and_progress_are_exact(self):
+        plan = json.loads((self.root / "corpora" / (self.corpus + ".plan.json")).read_text())
+        plan.pop("checksum")
+        plan["profile"] = "pr-checks"
+        plan = sealed(plan)
+        checks_corpus = plan["checksum"]
+        (self.root / "corpora" / (checks_corpus + ".plan.json")).write_text(canonical(plan))
+        state = self.state()
+        state.pop("checksum")
+        state["plan_id"] = checks_corpus
+        (self.root / "corpora" / (checks_corpus + ".state.json")).write_text(
+            canonical(sealed(state))
+        )
+        CacheIndex.build(self.source, self.database, corpus=checks_corpus, replace=True)
+        with CacheIndex(self.database) as index:
+            checks = index.query(
+                self.source, "terminal", corpus=checks_corpus, components=("checks",)
+            )
+            self.assertTrue(checks["items"])
+            self.assertEqual(checks["coverage"]["selected_members"], 4)
+
         CacheIndex.build(self.source, self.database, corpus=self.corpus, replace=True)
         with CacheIndex(self.database) as index:
             first = index.query(self.source, "terminal", corpus=self.corpus, limit=1)
@@ -657,3 +764,559 @@ class ExpandedRetrievalTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class NativeCILogsTests(unittest.TestCase):
+    def setUp(self):
+        import base64
+
+        from reposition import ci_logs
+        from reposition._demo_cache import write_object
+
+        self.temp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.temp.cleanup)
+        self.root = Path(self.temp.name) / "cache"
+        old, _ = make_cache(self.root)
+        self.record = copy.deepcopy(old["items"][1])
+        self.repo = old["repository"]
+        self.source = TriageCache(self.root)
+        self.database = self.root.parent / "view.sqlite"
+        self.write_object = lambda value: write_object(self.root, value)
+        self.identity = self.record["identity"]
+        revision = self.record["revision"]
+        self.head = revision["head_sha"]
+        raw_repo = dict(
+            full_name=self.repo["full_name"],
+            id=self.repo["database_id"],
+            node_id=self.repo["node_id"],
+        )
+        raw = dict(
+            number=2,
+            id=self.identity["database_id"],
+            node_id=self.identity["node_id"],
+            state="open",
+            merged=False,
+            title="Native CI test",
+            body="source summary",
+            updated_at=revision["updated_at"],
+            html_url="https://github.com/example/triage/pull/2",
+            base=dict(sha=revision["base_sha"], repo=raw_repo),
+            head=dict(sha=self.head, repo=raw_repo),
+        )
+        self.record["components"]["summary"]["object"] = self.write_object(raw)
+        source = dict(repository=self.repo, head_sha=self.head, fetched_at=END)
+        app = dict(id=42, slug="github-actions")
+        suite = dict(id=31, head_sha=self.head, app=app)
+        check = dict(
+            id=41,
+            head_sha=self.head,
+            app=app,
+            check_suite=dict(id=31),
+            name="Build native",
+            status="completed",
+            conclusion="failure",
+        )
+        self.checks = [
+            dict(
+                **source,
+                kind="check_suite",
+                resource=f"repos/example/triage/commits/{self.head}/check-suites",
+                data=suite,
+            ),
+            dict(
+                **source,
+                kind="check_run",
+                resource="repos/example/triage/check-suites/31/check-runs?filter=all",
+                data=check,
+            ),
+        ]
+        descriptor = self.record["components"]["checks"]
+        descriptor.update(
+            object=self.write_object(self.checks),
+            received_count=2,
+            expected_count=2,
+            fetched_at=END,
+        )
+        self.snapshot = publish(self.root, [self.record])["snapshot_id"]
+        run = dict(
+            id=51,
+            run_attempt=2,
+            head_sha=self.head,
+            check_suite_id=31,
+            repository=raw_repo,
+            url="https://api.github.com/repos/example/triage/actions/runs/51",
+            name="Native workflow",
+        )
+        job = dict(
+            id=61,
+            run_id=51,
+            head_sha=self.head,
+            name="Native job",
+            status="completed",
+            conclusion="failure",
+            url="https://api.github.com/repos/example/triage/actions/jobs/61",
+            check_run_url="https://api.github.com/repos/example/triage/check-runs/41",
+        )
+        self.log_text = "\x1b[31merror café 🙂\x1b[0m\nsecond failure line\n"
+        segment_raw = self.log_text.encode()
+        self.packet = dict(
+            schema_version=1,
+            artifact="ci-failure-log",
+            repository=self.repo,
+            number=2,
+            snapshot_id=self.snapshot,
+            source_repository=self.repo,
+            head_sha=self.head,
+            check_id=41,
+            check_name="Build native",
+            run_id=51,
+            attempt=2,
+            job_id=61,
+            check_source=dict(component="checks", object=descriptor["object"], index=1),
+            run=run,
+            job=job,
+            membership=job,
+            membership_resource="repos/example/triage/actions/runs/51/attempts/2/jobs?per_page=100&page=1",
+            log_resource="repos/example/triage/actions/jobs/61/logs",
+            fetched_at=END,
+            download_partial=True,
+            binding_revalidated=True,
+            observed_bytes=500,
+            observed_lines=20,
+            observed_sha256="e" * 64,
+            selection_basis="error-pattern leads",
+            omissions=["intervening lines omitted"],
+            segments=[
+                dict(
+                    start_line=5,
+                    end_line=6,
+                    start_byte=100,
+                    end_byte=100 + len(segment_raw),
+                    last_line_complete=True,
+                    content_base64=base64.b64encode(segment_raw).decode(),
+                )
+            ],
+            request_budget=20,
+            max_log_bytes=1000,
+            requests=8,
+            reserved_requests=11,
+        )
+        self.scope = dict(
+            repository=self.repo,
+            number=2,
+            snapshot_id=self.snapshot,
+            source_repository=self.repo["full_name"],
+            check_id=41,
+        )
+        (self.root / "ci-logs").mkdir()
+        self.pointer = self.root / "ci-logs" / (sha256(canonical(self.scope)) + ".json")
+        self.ref = self.save_packet()
+        self.ci = ci_logs
+
+    def save_packet(self):
+        ref = self.write_object(self.packet)
+        self.pointer.write_text(
+            canonical(
+                dict(
+                    schema_version=1,
+                    artifact="ci-failure-log-pointer",
+                    scope=self.scope,
+                    log_object=ref,
+                )
+            )
+            + "\n"
+        )
+        return ref
+
+    def build(self, **kwargs):
+        return CacheIndex.build(self.source, self.database, snapshot=self.snapshot, **kwargs)
+
+    def query(self, query="failure", **kwargs):
+        with CacheIndex(self.database) as index:
+            return index.query(
+                self.source,
+                query,
+                snapshot=self.snapshot,
+                components=("ci_logs",),
+                max_bytes=16000,
+                **kwargs,
+            )
+
+    def test_native_search_retrieve_exact_raw_segments_and_frozen_pointers(self):
+        before = evidence_bytes(self.root) | {"pointer": self.pointer.read_bytes()}
+        report = self.build(components=("ci_logs",))
+        self.assertEqual(report["coverage"]["ci_logs"]["captures"], 1)
+        response = self.query()
+        fragment = response["items"][0]["fragments"][0]
+        self.assertEqual(fragment["component"], "ci_logs")
+        self.assertEqual(fragment["excerpt"]["text"], self.log_text)
+        self.assertEqual(fragment["excerpt"]["original_start_byte"], 100)
+        self.assertEqual(fragment["locator"]["original_start_line"], 5)
+        self.assertEqual(fragment["ci_log"]["attempt"], 2)
+        self.assertEqual(fragment["ci_log"]["capture_snapshot_id"], self.snapshot)
+        self.assertEqual(fragment["ci_log"]["provider"], "github-actions")
+        self.assertEqual(fragment["excerpt"]["sha256"], sha256(self.log_text))
+        self.assertTrue(self.query("workflow")["items"])
+        colored = self.query("error")["items"][0]["fragments"][0]
+        self.assertEqual(colored["excerpt"]["text"], self.log_text)
+        self.assertEqual(colored["excerpt"]["original_start_byte"], 100)
+        self.assertIn("observation outside freshness window", colored["problems"])
+        self.assertTrue(self.query("Build native")["items"])
+        with CacheIndex(self.database) as index:
+            retrieved = index.retrieve(
+                self.source,
+                (fragment["unit_id"],),
+                snapshot=self.snapshot,
+                checkpoint=response["checkpoint"],
+                fragment_bytes=10,
+                max_bytes=16000,
+            )
+        part = retrieved["items"][0]["fragments"][0]
+        self.assertLess(part["excerpt"]["end"], len(self.log_text.encode()))
+        self.assertEqual(part["excerpt"]["original_end_byte"], 100 + part["excerpt"]["end"])
+        self.assertIsNotNone(part["continuation"])
+        self.assertEqual(before, evidence_bytes(self.root) | {"pointer": self.pointer.read_bytes()})
+        self.pointer.write_text("later mutable pointer is not consulted")
+        self.assertEqual(self.query()["items"][0]["fragments"][0]["object"], self.ref)
+        self.pointer.unlink()
+        self.assertTrue(self.query()["items"])
+
+        # ANSI matching must also place a short excerpt around a distant colored error.
+        import base64
+
+        raw = ("pré🙂\n" * 80 + self.log_text).encode()
+        self.packet["segments"][0].update(
+            end_byte=100 + len(raw),
+            end_line=86,
+            content_base64=base64.b64encode(raw).decode(),
+        )
+        self.packet.update(observed_bytes=100 + len(raw), observed_lines=86)
+        self.save_packet()
+        self.build(replace=True, components=("ci_logs",))
+        excerpt = self.query("error", fragment_bytes=64)["items"][0]["fragments"][0]["excerpt"]
+        self.assertIn("error", excerpt["text"])
+        self.assertGreater(excerpt["start"], 0)
+        self.assertEqual(raw[excerpt["start"]:excerpt["end"]].decode(), excerpt["text"])
+        self.assertEqual(excerpt["sha256"], sha256(excerpt["text"]))
+        self.assertEqual(excerpt["original_start_byte"], 100 + excerpt["start"])
+
+    def test_partial_non_utf8_unavailable_and_ordinary_component_isolation(self):
+        import base64
+
+        self.packet["segments"][0]["content_base64"] = base64.b64encode(
+            b"\xff" * (len(self.log_text.encode()) - 1) + b"\n"
+        ).decode()
+        # Keep valid two-line native bounds while omitting this unsupported projection.
+        raw = b"bad \xff\nerror \xfe\n"
+        self.packet["segments"][0].update(
+            content_base64=base64.b64encode(raw).decode(), end_byte=100 + len(raw)
+        )
+        self.save_packet()
+        coverage = self.build(components=("ci_logs",))["coverage"]["ci_logs"]
+        self.assertEqual(coverage["non_utf8_segments"], 1)
+        self.assertEqual(coverage["partial"], 1)
+        self.assertEqual(coverage["omission_count"], 1)
+        self.assertFalse(self.query()["items"])
+        self.assertTrue(self.query("workflow")["items"])
+        self.packet["segments"] = []
+        self.save_packet()
+        self.assertEqual(
+            self.build(replace=True, components=("ci_logs",))["coverage"]["ci_logs"]["unavailable"],
+            1,
+        )
+        self.pointer.write_text("invalid pointer ignored by ordinary explicit scope")
+        with patch.object(
+            self.ci, "Selection", side_effect=AssertionError("CI discovery must not run")
+        ):
+            self.build(replace=True, components=("summary",))
+
+    def test_pointer_drift_refuses_publication_and_source_corruption_fails(self):
+        self.build(components=("ci_logs",))
+        old = self.database.read_bytes()
+        original = self.source.checkpoint
+
+        def drift(**kwargs):
+            self.pointer.write_bytes(self.pointer.read_bytes() + b" ")
+            return original(**kwargs)
+
+        with (
+            patch.object(self.source, "checkpoint", side_effect=drift),
+            self.assertRaisesRegex(ValueError, "association changed"),
+        ):
+            self.build(replace=True, components=("ci_logs",))
+        self.assertEqual(self.database.read_bytes(), old)
+        object_path = self.root / "objects" / (self.ref["sha256"] + ".json")
+        object_path.write_bytes(object_path.read_bytes() + b" ")
+        with self.assertRaisesRegex(ValueError, "checksum|size"):
+            self.query()
+
+    def test_packet_binding_and_segment_validation_and_limits(self):
+        for field in ("job", "membership"):
+            for attempt in (3, True, None, "2"):
+                with self.subTest(field=field, attempt=attempt):
+                    saved = self.packet[field]
+                    self.packet[field] = dict(saved, run_attempt=attempt)
+                    self.save_packet()
+                    with self.assertRaisesRegex(ValueError, "run attempt"):
+                        self.build(components=("ci_logs",))
+                    self.packet[field] = saved
+        self.packet["job"] = dict(self.packet["job"], run_attempt=2)
+        self.packet["membership"] = dict(self.packet["membership"], run_attempt=2)
+        for key, changed in (
+            ("head_sha", "f" * 40),
+            ("check_id", 99),
+            ("attempt", 3),
+            ("number", 4),
+        ):
+            with self.subTest(key=key):
+                saved = self.packet[key]
+                self.packet[key] = changed
+                self.save_packet()
+                with self.assertRaises(ValueError):
+                    self.build(components=("ci_logs",))
+                self.packet[key] = saved
+        self.packet["check_source"]["index"] = True
+        self.save_packet()
+        with self.assertRaisesRegex(ValueError, "source index"):
+            self.build(components=("ci_logs",))
+        self.packet["check_source"]["index"] = 1
+        self.packet["segments"][0]["end_byte"] += 1
+        self.save_packet()
+        with self.assertRaisesRegex(ValueError, "segment source ranges"):
+            self.build(components=("ci_logs",))
+        self.packet["segments"][0]["end_byte"] -= 1
+        self.save_packet()
+        self.build(components=("ci_logs",))
+        with self.assertRaisesRegex(ValueError, "verification byte ceiling"):
+            self.query(max_verify_bytes=self.ref["bytes"])
+        response = self.query()
+        self.assertGreater(response["diagnostics"]["verified_object_bytes"], self.ref["bytes"])
+        self.assertEqual(response["diagnostics"]["verified_object_count"], 3)
+        with self.assertRaisesRegex(ValueError, "unit ceiling"):
+            self.build(replace=True, components=("ci_logs",), max_units=1)
+        self.assertTrue(self.query()["items"])
+        import base64
+
+        raw = b"failure line\n" * 4000
+        self.packet.update(
+            observed_bytes=len(raw),
+            observed_lines=4000,
+            max_log_bytes=65536,
+            segments=[
+                dict(
+                    start_line=1,
+                    end_line=4000,
+                    start_byte=0,
+                    end_byte=len(raw),
+                    last_line_complete=True,
+                    content_base64=base64.b64encode(raw).decode(),
+                )
+            ],
+        )
+        self.save_packet()
+        with self.assertRaisesRegex(ValueError, "storage ceiling"):
+            self.build(
+                replace=True,
+                components=("ci_logs",),
+                max_index_bytes=65536,
+                policy=ProjectionPolicy(max_bytes=256, overlap_bytes=0),
+            )
+        self.assertTrue(self.query()["items"])
+        with CacheIndex(self.database) as index, self.assertRaisesRegex(ValueError, "byte budget"):
+            index.query(
+                self.source,
+                "failure",
+                snapshot=self.snapshot,
+                components=("ci_logs",),
+                max_bytes=4096,
+            )
+        checks_path = (
+            self.root
+            / "objects"
+            / (self.record["components"]["checks"]["object"]["sha256"] + ".json")
+        )
+        checks_path.write_bytes(checks_path.read_bytes() + b" ")
+        with self.assertRaisesRegex(ValueError, "verification"):
+            self.query()
+
+    def test_reused_capture_requires_exact_raw_check_and_suite(self):
+        old_snapshot = self.snapshot
+        updated = copy.deepcopy(self.record)
+        # A metadata-only distinct snapshot with the same retained source projections.
+        updated["components"]["checks"]["source"]["resource"] += "?observation=2"
+        self.snapshot = publish(self.root, [updated])["snapshot_id"]
+        self.scope["snapshot_id"] = self.snapshot
+        self.pointer = self.root / "ci-logs" / (sha256(canonical(self.scope)) + ".json")
+        self.save_packet()
+        self.build(components=("ci_logs",))
+        context = self.query()["items"][0]["fragments"][0]["ci_log"]
+        self.assertEqual(context["capture_snapshot_id"], old_snapshot)
+        self.assertEqual(context["selected_snapshot_id"], self.snapshot)
+        self.assertEqual(self.query()["diagnostics"]["verified_object_count"], 3)
+        different = copy.deepcopy(self.checks)
+        different[0]["data"]["extra_raw_suite_field"] = "changed"
+        updated["components"]["checks"]["object"] = self.write_object(different)
+        self.snapshot = publish(self.root, [updated])["snapshot_id"]
+        self.scope["snapshot_id"] = self.snapshot
+        self.pointer = self.root / "ci-logs" / (sha256(canonical(self.scope)) + ".json")
+        self.save_packet()
+        with self.assertRaisesRegex(ValueError, "reuse differs"):
+            self.build(replace=True, components=("ci_logs",))
+
+    def test_cli_selects_ci_logs_and_cap(self):
+        arguments = [
+            "cache-index",
+            "--cache",
+            str(self.root),
+            "--snapshot",
+            self.snapshot,
+            "--db",
+            str(self.database),
+            "--component",
+            "ci_logs",
+            "--max-ci-logs",
+            "1",
+        ]
+        with contextlib.redirect_stdout(io.StringIO()) as output:
+            self.assertEqual(main(arguments), 0)
+        self.assertEqual(
+            json.loads(output.getvalue())["coverage"]["ci_logs"]["maximum_captures"], 1
+        )
+        with contextlib.redirect_stdout(io.StringIO()) as output:
+            self.assertEqual(
+                main(
+                    [
+                        "cache-query",
+                        "--cache",
+                        str(self.root),
+                        "--snapshot",
+                        self.snapshot,
+                        "--db",
+                        str(self.database),
+                        "--component",
+                        "ci_logs",
+                        "--query",
+                        "failure",
+                        "--max-bytes",
+                        "16000",
+                    ]
+                ),
+                0,
+            )
+        self.assertTrue(json.loads(output.getvalue())["items"])
+
+    def test_exact_lookup_caps_missing_provider_and_foreign_packet_repository(self):
+        additional = copy.deepcopy(self.checks[1])
+        additional["data"]["id"] = 42
+        all_checks = self.checks + [additional]
+        record = copy.deepcopy(self.record)
+        record["components"]["checks"].update(
+            object=self.write_object(all_checks), received_count=3, expected_count=3
+        )
+        self.snapshot = publish(self.root, [record])["snapshot_id"]
+        self.scope["snapshot_id"] = self.snapshot
+        self.pointer = self.root / "ci-logs" / (sha256(canonical(self.scope)) + ".json")
+        self.save_packet()
+        coverage = self.build(components=("ci_logs",), max_ci_logs=1)["coverage"]["ci_logs"]
+        self.assertEqual(coverage["captures"], 1)
+        self.assertEqual(coverage["capped_checks"], 1)
+        coverage = self.build(replace=True, components=("ci_logs",))["coverage"]["ci_logs"]
+        self.assertEqual(coverage["missing"], 1)
+        additional["data"]["app"]["slug"] = "another-provider"
+        record["components"]["checks"]["object"] = self.write_object(self.checks + [additional])
+        self.snapshot = publish(self.root, [record])["snapshot_id"]
+        self.scope["snapshot_id"] = self.snapshot
+        self.pointer = self.root / "ci-logs" / (sha256(canonical(self.scope)) + ".json")
+        self.save_packet()
+        coverage = self.build(replace=True, components=("ci_logs",))["coverage"]["ci_logs"]
+        self.assertEqual(coverage["unsupported_providers"], 1)
+        self.packet["repository"] = {**self.repo, "database_id": 999}
+        self.save_packet()
+        with self.assertRaisesRegex(ValueError, "repository"):
+            self.build(replace=True, components=("ci_logs",))
+
+    def test_corpus_selection_and_omitted_segment_progressive_boundaries(self):
+        import base64
+
+        raw = b"later failure window\n"
+        self.packet["segments"].append(
+            dict(
+                start_line=15,
+                end_line=15,
+                start_byte=300,
+                end_byte=300 + len(raw),
+                last_line_complete=True,
+                content_base64=base64.b64encode(raw).decode(),
+            )
+        )
+        self.save_packet()
+        plan = sealed(
+            dict(
+                schema_version=1,
+                artifact="evidence-corpus-plan",
+                repository=self.repo,
+                inventory_snapshot=self.snapshot,
+                scope="open-prs",
+                profile="pr-checks",
+                max_age=86400,
+                members=[self.identity],
+            )
+        )
+        corpus = plan["checksum"]
+        (self.root / "corpora" / (corpus + ".plan.json")).write_text(canonical(plan) + "\n")
+        state = sealed(
+            dict(
+                schema_version=1,
+                artifact="evidence-corpus-state",
+                plan_id=corpus,
+                updated_at=END,
+                status="finished",
+                last_run=None,
+                items={
+                    "pr:2": dict(
+                        snapshot_id=self.snapshot, outcome="complete", attempts=1, error=None
+                    )
+                },
+            )
+        )
+        (self.root / "corpora" / (corpus + ".state.json")).write_text(canonical(state) + "\n")
+        CacheIndex.build(self.source, self.database, corpus=corpus, components=("ci_logs",))
+        with CacheIndex(self.database) as index:
+            response = index.query(
+                self.source, "second", corpus=corpus, components=("ci_logs",), max_bytes=16000
+            )
+            fragment = response["items"][0]["fragments"][0]
+            result = index.retrieve(
+                self.source,
+                (fragment["unit_id"],),
+                checkpoint=response["checkpoint"],
+                corpus=corpus,
+                fragment_bytes=65536,
+                max_bytes=16000,
+            )
+        retrieved = result["items"][0]["fragments"][0]
+        self.assertEqual(retrieved["excerpt"]["text"], self.log_text)
+        self.assertIsNone(retrieved["continuation"])
+        self.assertNotIn("later failure", retrieved["excerpt"]["text"])
+        self.assertEqual(retrieved["locator"]["boundary_end"], len(self.log_text.encode()))
+        self.assertLessEqual(len(encode_response(result).encode()), 16000)
+        self.assertEqual(result["budget"]["used_bytes"], len(encode_response(result).encode()))
+
+    def test_corrupt_derived_coverage_cannot_upgrade_partial_capture(self):
+        self.build(components=("ci_logs",))
+        with sqlite3.connect(self.database) as connection:
+            connection.row_factory = sqlite3.Row
+            row = connection.execute(
+                "SELECT u.id,u.data,u.binding_id,b.data AS binding FROM units u JOIN bindings b ON b.id=u.binding_id WHERE u.field='log'"
+            ).fetchone()
+            binding = json.loads(row["binding"])
+            binding["coverage"]["status"] = "complete"
+            binding_text = canonical(binding)
+            binding_id = sha256(binding_text)
+            connection.execute("INSERT INTO bindings VALUES(?,?)", (binding_id, binding_text))
+            identifier = sha256(canonical({**binding, **json.loads(row["data"])}))
+            connection.execute(
+                "UPDATE units SET id=?,binding_id=? WHERE id=?", (identifier, binding_id, row["id"])
+            )
+        with self.assertRaisesRegex(ValueError, "CI source binding"):
+            self.query()

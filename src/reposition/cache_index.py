@@ -18,6 +18,7 @@ from pathlib import Path
 from typing import Any
 
 from . import _triage_contract as contract
+from . import ci_logs
 from .cache_source import TriageCache, parse_json
 from .models import canonical, sha256
 from .projections import ProjectionPolicy, _boundary, pointer_get, project, reproduce
@@ -76,9 +77,11 @@ def _sync(directory: Path) -> None:
             os.close(descriptor)
 
 
-def _preview(text: str, query: str, maximum: int) -> dict[str, Any]:
+def _preview(
+    text: str, query: str, maximum: int, *, match_text: str | None = None
+) -> dict[str, Any]:
     raw = text.encode("utf-8")
-    span = _match_span(text, query) if query else None
+    span = _match_span(text if match_text is None else match_text, query) if query else None
     start = 0
     if span:
         match_start = len(text[: span[0]].encode("utf-8"))
@@ -127,6 +130,30 @@ def _uri(repository, identity, locator, value, component):
             if isinstance(candidate, str) and candidate.startswith("https://"):
                 return candidate
     return base
+
+
+def _sources(source, member, component, summary_payload, captures, policy):
+    record = member["record"]
+    if component == "ci_logs":
+        if record["identity"]["kind"] == "pr":
+            for descriptor, value, context, projections in ci_logs.records(
+                captures, member, policy
+            ):
+                yield descriptor, descriptor["object"], value, projections, context
+        return
+
+    descriptor = record["components"].get(component)
+    if descriptor is None or descriptor["object"] is None:
+        yield descriptor, None, None, (), None
+        return
+
+    payload = (
+        summary_payload
+        if component == "summary"
+        else source.object(component, descriptor, record["identity"]["kind"])
+    )
+    value = parse_json(payload) if component != "diff" else None
+    yield descriptor, descriptor["object"], value, project(component, payload, policy), None
 
 
 class CacheIndex:
@@ -237,16 +264,21 @@ class CacheIndex:
         policy: ProjectionPolicy | None = None,
         max_index_bytes: int = 512 * 1024 * 1024,
         max_units: int = 1_000_000,
+        max_ci_logs: int = 1000,
         replace: bool = False,
         recover: bool = False,
     ) -> dict[str, Any]:
         _limit(max_index_bytes, "max_index_bytes", 1024**4, 65536)
         _limit(max_units, "max_units", 100_000_000)
+        _limit(max_ci_logs, "max_ci_logs", 10000)
         policy = policy or ProjectionPolicy()
-        components = tuple(sorted(set(components or contract.COMPONENTS)))
-        if not components or set(components) - contract.COMPONENTS:
+        components = tuple(sorted(set(components or (contract.COMPONENTS | {"ci_logs"}))))
+        if not components or set(components) - (contract.COMPONENTS | {"ci_logs"}):
             raise ValueError("unsupported index components")
         selected = source.select(snapshot=snapshot, corpus=corpus)
+        captures = (
+            ci_logs.Selection(source, selected, max_ci_logs) if "ci_logs" in components else None
+        )
         destination = Path(path).absolute()
         if destination.suffix not in {".sqlite", ".db"}:
             raise ValueError("cache index destination must end in .sqlite or .db")
@@ -331,101 +363,98 @@ class CacheIndex:
                 )
                 snapshots.add(member["snapshot_id"])
                 for component in components:
-                    descriptor = record["components"].get(component)
-                    status = descriptor["status"] if descriptor else "missing"
-                    statuses.setdefault(component, {})[status] = (
-                        statuses.setdefault(component, {}).get(status, 0) + 1
-                    )
-                    if descriptor is None or descriptor["object"] is None:
-                        continue
-                    payload = (
-                        summary_payload
-                        if component == "summary"
-                        else source.object(component, descriptor, identity["kind"])
-                    )
-                    value = parse_json(payload) if component != "diff" else None
-                    reference = descriptor["object"]
-                    connection.execute(
-                        "INSERT OR IGNORE INTO objects VALUES(?,?,?)",
-                        (reference["sha256"], reference["bytes"], reference["format"]),
-                    )
-                    for locator, text in project(component, payload, policy):
-                        count += 1
-                        if count > max_units:
-                            raise ValueError(
-                                "index unit ceiling exceeded; select fewer components or raise --max-units"
+                    for descriptor, reference, value, projections, ci_context in _sources(
+                        source, member, component, summary_payload, captures, policy
+                    ):
+                        status = descriptor["status"] if descriptor else "missing"
+                        statuses.setdefault(component, {})[status] = (
+                            statuses.setdefault(component, {}).get(status, 0) + 1
+                        )
+                        if descriptor is None or reference is None:
+                            continue
+                        connection.execute(
+                            "INSERT OR IGNORE INTO objects VALUES(?,?,?)",
+                            (reference["sha256"], reference["bytes"], reference["format"]),
+                        )
+                        for locator, text in projections:
+                            count += 1
+                            if count > max_units:
+                                raise ValueError(
+                                    "index unit ceiling exceeded; select fewer components or raise --max-units"
+                                )
+                            data = {
+                                "projection_version": policy.to_dict()["version"],
+                                "repository": selected.repository,
+                                "identity": identity,
+                                "snapshot_id": member["snapshot_id"],
+                                "component": component,
+                                "object": reference,
+                                "locator": locator,
+                                "projection_sha256": sha256(text),
+                                "item_revision": record["revision"],
+                                "component_revision": descriptor["revision"],
+                                "observed_at": descriptor["fetched_at"],
+                                "uri": ci_logs.uri(reference, locator)
+                                if ci_context is not None
+                                else _uri(selected.repository, identity, locator, value, component),
+                                **({"ci_log": ci_context} if ci_context is not None else {}),
+                                "coverage": ci_logs.coverage(descriptor, member["outcome"]),
+                            }
+                            serialized = canonical(data)
+                            if len(serialized.encode("utf-8")) > 16384:
+                                raise ValueError(
+                                    "retrieval-unit metadata exceeds its 16 KiB ceiling; source identity, URI or path is oversized"
+                                )
+                            identifier = sha256(serialized)
+                            unit_fields = {
+                                key: data[key] for key in ("locator", "projection_sha256", "uri")
+                            }
+                            binding = {
+                                key: value for key, value in data.items() if key not in unit_fields
+                            }
+                            binding_text = canonical(binding)
+                            binding_id = sha256(binding_text)
+                            connection.execute(
+                                "INSERT OR IGNORE INTO bindings VALUES(?,?)",
+                                (binding_id, binding_text),
                             )
-                        data = {
-                            "projection_version": policy.to_dict()["version"],
-                            "repository": selected.repository,
-                            "identity": identity,
-                            "snapshot_id": member["snapshot_id"],
-                            "component": component,
-                            "object": reference,
-                            "locator": locator,
-                            "projection_sha256": sha256(text),
-                            "item_revision": record["revision"],
-                            "component_revision": descriptor["revision"],
-                            "observed_at": descriptor["fetched_at"],
-                            "uri": _uri(selected.repository, identity, locator, value, component),
-                            "coverage": {
-                                "status": descriptor["status"],
-                                "truncated": descriptor["truncated"],
-                                "pagination_complete": descriptor["pagination_complete"],
-                                "expected_count": descriptor["expected_count"],
-                                "received_count": descriptor["received_count"],
-                                "error_present": descriptor["error"] is not None,
-                                "outcome": member["outcome"],
-                            },
-                        }
-                        serialized = canonical(data)
-                        if len(serialized.encode("utf-8")) > 16384:
-                            raise ValueError(
-                                "retrieval-unit metadata exceeds its 16 KiB ceiling; source identity, URI or path is oversized"
+                            unit_digest.update(identifier.encode("ascii") + b"\n")
+                            column = (
+                                "title"
+                                if component == "summary" and locator["field"] == "title"
+                                else "path"
+                                if locator["field"] == "path"
+                                else "text"
                             )
-                        identifier = sha256(serialized)
-                        unit_fields = {
-                            key: data[key] for key in ("locator", "projection_sha256", "uri")
-                        }
-                        binding = {
-                            key: value for key, value in data.items() if key not in unit_fields
-                        }
-                        binding_text = canonical(binding)
-                        binding_id = sha256(binding_text)
-                        connection.execute(
-                            "INSERT OR IGNORE INTO bindings VALUES(?,?)", (binding_id, binding_text)
-                        )
-                        unit_digest.update(identifier.encode("ascii") + b"\n")
-                        column = (
-                            "title"
-                            if component == "summary" and locator["field"] == "title"
-                            else "path"
-                            if locator["field"] == "path"
-                            else "text"
-                        )
-                        connection.execute(
-                            "INSERT INTO units(rowid,id,item_key,component,field,observed,data,column_name,binding_id,projection) VALUES(?,?,?,?,?,?,?,?,?,?)",
-                            (
-                                count,
-                                identifier,
-                                item_key,
-                                component,
-                                locator["field"],
-                                contract.timestamp(descriptor["fetched_at"]).timestamp(),
-                                canonical(unit_fields),
-                                column,
-                                binding_id,
-                                zlib.compress(text.encode("utf-8")),
-                            ),
-                        )
-                        fields = {"title": "", "path": "", "text": "", column: text}
-                        connection.execute(
-                            "INSERT INTO evidence(rowid,title,path,text) VALUES(?,?,?,?)",
-                            (count, fields["title"], fields["path"], fields["text"]),
-                        )
-                    del payload, value
+                            connection.execute(
+                                "INSERT INTO units(rowid,id,item_key,component,field,observed,data,column_name,binding_id,projection) VALUES(?,?,?,?,?,?,?,?,?,?)",
+                                (
+                                    count,
+                                    identifier,
+                                    item_key,
+                                    component,
+                                    locator["field"],
+                                    contract.timestamp(descriptor["fetched_at"]).timestamp(),
+                                    canonical(unit_fields),
+                                    column,
+                                    binding_id,
+                                    zlib.compress(text.encode("utf-8")),
+                                ),
+                            )
+                            fields = {
+                                "title": "",
+                                "path": "",
+                                "text": "",
+                                column: ci_logs.search_text(component, locator, text),
+                            }
+                            connection.execute(
+                                "INSERT INTO evidence(rowid,title,path,text) VALUES(?,?,?,?)",
+                                (count, fields["title"], fields["path"], fields["text"]),
+                            )
                 del summary_payload
                 connection.commit()
+            if captures is not None:
+                captures.recheck(source)
             # Fixed snapshots bypass current pointers. Corpus progress changes invalidate the view.
             if source.checkpoint(snapshot=snapshot, corpus=corpus) != selected.checkpoint:
                 raise ValueError("source selection changed during build; restart cache-index")
@@ -445,7 +474,11 @@ class CacheIndex:
                 "units_sha256": unit_digest.hexdigest(),
                 "object_count": object_count,
                 "source_bytes": object_bytes,
-                "coverage": {**selected.coverage, "components": statuses},
+                "coverage": {
+                    **selected.coverage,
+                    "components": statuses,
+                    **({"ci_logs": captures.coverage} if captures is not None else {}),
+                },
                 "tokenizer": "unicode61",
                 "ranking": {
                     "method": "fts5",
@@ -470,6 +503,8 @@ class CacheIndex:
                 os.fsync(stream.fileno())
             if source.checkpoint(snapshot=snapshot, corpus=corpus) != selected.checkpoint:
                 raise ValueError("source selection changed before publication; restart cache-index")
+            if captures is not None:
+                captures.recheck(source)
             os.replace(temporary, destination)
             _sync(destination.parent)
             return {
@@ -563,11 +598,9 @@ class CacheIndex:
             by_object.setdefault((data["object"]["sha256"], data["object"]["format"]), []).append(
                 (data, identifier)
             )
-        total = sum(units[0][0]["object"]["bytes"] for units in by_object.values())
-        if total > max_verify_bytes:
-            raise ValueError(
-                "selected source objects exceed the verification byte ceiling; narrow the query or raise --max-verify-bytes"
-            )
+        reads = ci_logs.Reads(max_verify_bytes)
+        for units in by_object.values():
+            reads.reserve(units[0][0]["object"])
         excerpts = {}
         manifests = {}
         for units in by_object.values():
@@ -587,48 +620,97 @@ class CacheIndex:
                     raise ValueError(
                         "indexed item identity no longer reproduces; rebuild the index"
                     )
-                descriptor = record["components"].get(component)
-                if descriptor is None:
-                    raise ValueError("indexed component no longer reproduces; rebuild the index")
-                if (
-                    data["repository"] != manifest["repository"]
-                    or data["object"] != descriptor["object"]
-                    or data["item_revision"] != record["revision"]
-                    or data["component_revision"] != descriptor["revision"]
-                    or data["observed_at"] != descriptor["fetched_at"]
-                    or data["coverage"]["status"] != descriptor["status"]
-                ):
-                    raise ValueError(
-                        "indexed source binding no longer reproduces; rebuild the index"
+                if component == "ci_logs":
+                    value = ci_logs.packet(
+                        source, snapshot, identity["number"], data["object"], reads
                     )
-                if payload is None:
-                    payload = source.object(component, descriptor, identity["kind"])
-                    value = parse_json(payload) if component != "diff" else None
-                binding = (snapshot, component, identity["kind"], identity["number"])
-                if binding not in validated:
+                    descriptor = ci_logs.describe(value, data["object"], record["revision"])
+                    if (
+                        data["component_revision"] != descriptor["revision"]
+                        or data["coverage"]
+                        != ci_logs.coverage(descriptor, data["coverage"]["outcome"])
+                        or data["repository"] != manifest["repository"]
+                        or data["item_revision"] != record["revision"]
+                        or data["ci_log"] != ci_logs.context(value, snapshot)
+                        or data["observed_at"] != value["fetched_at"]
+                    ):
+                        raise ValueError("indexed CI source binding no longer reproduces")
+                    reproduced = next(
+                        (
+                            text
+                            for locator, text in ci_logs.project(
+                                value,
+                                ProjectionPolicy(
+                                    **{
+                                        k: v
+                                        for k, v in self.manifest["projection"].items()
+                                        if k != "version"
+                                    }
+                                ),
+                            )
+                            if locator == data["locator"]
+                        ),
+                        None,
+                    )
+                    if (
+                        reproduced is None
+                        or sha256(reproduced) != data["projection_sha256"]
+                        or ci_logs.uri(data["object"], data["locator"]) != data["uri"]
+                    ):
+                        raise ValueError("indexed CI projection no longer reproduces")
+                    locator = data["locator"]
+                    original = ci_logs.original(value, locator)
+                else:
+                    descriptor = record["components"].get(component)
+                    if descriptor is None:
+                        raise ValueError(
+                            "indexed component no longer reproduces; rebuild the index"
+                        )
+                    if (
+                        data["repository"] != manifest["repository"]
+                        or data["object"] != descriptor["object"]
+                        or data["item_revision"] != record["revision"]
+                        or data["component_revision"] != descriptor["revision"]
+                        or data["observed_at"] != descriptor["fetched_at"]
+                        or data["coverage"]["status"] != descriptor["status"]
+                    ):
+                        raise ValueError(
+                            "indexed source binding no longer reproduces; rebuild the index"
+                        )
+                    if payload is None:
+                        payload = reads.object(source, component, descriptor, identity["kind"])
+                        value = parse_json(payload) if component != "diff" else None
+                    binding = (snapshot, component, identity["kind"], identity["number"])
+                    if binding not in validated:
+                        try:
+                            contract.validate_payload(
+                                component, descriptor, identity["kind"], payload
+                            )
+                        except (TypeError, ValueError, KeyError) as exc:
+                            raise ValueError(
+                                "selected component payload failed verification"
+                            ) from exc
+                        validated.add(binding)
                     try:
-                        contract.validate_payload(component, descriptor, identity["kind"], payload)
-                    except (TypeError, ValueError, KeyError) as exc:
-                        raise ValueError("selected component payload failed verification") from exc
-                    validated.add(binding)
-                try:
-                    text = reproduce(payload, data["locator"], value=value)
-                except (ValueError, KeyError, TypeError, IndexError) as exc:
-                    raise ValueError(
-                        "indexed locator no longer reproduces; rebuild the index"
-                    ) from exc
-                if (
-                    sha256(text) != data["projection_sha256"]
-                    or _uri(manifest["repository"], identity, data["locator"], value, component)
-                    != data["uri"]
-                ):
-                    raise ValueError("indexed projection no longer reproduces; rebuild the index")
-                locator = data["locator"]
-                original = (
-                    payload
-                    if locator["pointer"] is None
-                    else pointer_get(value, locator["pointer"])
-                )
+                        text = reproduce(payload, data["locator"], value=value)
+                    except (ValueError, KeyError, TypeError, IndexError) as exc:
+                        raise ValueError(
+                            "indexed locator no longer reproduces; rebuild the index"
+                        ) from exc
+                    if (
+                        sha256(text) != data["projection_sha256"]
+                        or _uri(manifest["repository"], identity, data["locator"], value, component)
+                        != data["uri"]
+                    ):
+                        raise ValueError(
+                            "indexed projection no longer reproduces; rebuild the index"
+                        )
+                    locator = data["locator"]
+                    original = (
+                        payload
+                        if locator["pointer"] is None
+                        else pointer_get(value, locator["pointer"])
+                    )
                 raw = original.encode("utf-8")
                 if len(raw) != locator["source_bytes"] or not 0 <= locator[
                     "boundary_start"
@@ -664,8 +746,14 @@ class CacheIndex:
                         "omitted_before": start - locator["boundary_start"],
                         "omitted_after": locator["boundary_end"] - end,
                     }
+                if window is not None and component == "ci_logs" and "segment_index" in locator:
+                    excerpts[identifier]["original_start_byte"] = (
+                        locator["original_start_byte"] + start
+                    )
+                    excerpts[identifier]["original_end_byte"] = locator["original_start_byte"] + end
                 del raw, original
             del payload, value
+        self._last_verified_objects = reads.objects
         return excerpts
 
     def _base(self, schema: str, maximum: int):
@@ -684,10 +772,20 @@ class CacheIndex:
 
     @staticmethod
     def _fragment(data, identifier, score, text, query, maximum, max_age):
-        preview = _preview(text, query, maximum)
+        preview = _preview(
+            text,
+            query,
+            maximum,
+            match_text=ci_logs.search_text(data["component"], data["locator"], text),
+        )
         preview["start"] += data["locator"]["start"]
         preview["end"] += data["locator"]["start"]
         preview["offset_unit"] = data["locator"]["coordinate_space"]
+        if "segment_index" in data["locator"]:
+            preview["original_start_byte"] = (
+                data["locator"]["original_start_byte"] + preview["start"]
+            )
+            preview["original_end_byte"] = data["locator"]["original_start_byte"] + preview["end"]
         preview["omitted_before"] = preview["start"]
         preview["omitted_after"] = data["locator"]["source_bytes"] - preview["end"]
         descriptor = {
@@ -696,13 +794,24 @@ class CacheIndex:
             "fetched_at": data["observed_at"],
         }
         problems = contract.component_problems(
-            data["component"],
+            "checks" if data["component"] == "ci_logs" else data["component"],
             descriptor,
             data["item_revision"],
             datetime.now(timezone.utc).isoformat(),
             max_age,
         )
+        if data["component"] == "ci_logs":
+            problems = (
+                [problem for problem in problems if problem != "retained"]
+                + ["separately captured log; coverage is not snapshot completeness"]
+                + data["ci_log"]["omissions"]
+            )
+            if data["ci_log"]["download_partial"]:
+                problems.append("partial download")
+            if not data["ci_log"]["binding_revalidated"]:
+                problems.append("binding not revalidated")
         return {
+            **({"ci_log": data["ci_log"]} if "ci_log" in data else {}),
             "unit_id": identifier,
             "snapshot_id": data["snapshot_id"],
             "component": data["component"],
@@ -966,7 +1075,12 @@ class CacheIndex:
                         if data["locator"]["field"] == "path"
                         else "text"
                     )
-                    fields = {"title": "", "path": "", "text": "", column: text}
+                    fields = {
+                        "title": "",
+                        "path": "",
+                        "text": "",
+                        column: ci_logs.search_text(data["component"], data["locator"], text),
+                    }
                     probe.execute(
                         "INSERT INTO eligible VALUES(?,?,?)",
                         (fields["title"], fields["path"], fields["text"]),
@@ -978,6 +1092,12 @@ class CacheIndex:
                         "FTS postings do not reproduce from projections; rebuild the index"
                     )
         self._verify(source, entries, max_verify_bytes=max_verify_bytes)
+        output["diagnostics"]["verified_object_count"] = len(self._last_verified_objects)
+        output["diagnostics"]["verified_object_bytes"] = sum(self._last_verified_objects.values())
+        if _measure(output, max_bytes) > max_bytes:
+            raise ValueError(
+                "response byte budget cannot fit verified source diagnostics; raise --max-bytes"
+            )
         self._scope(source, snapshot, corpus)
         return output
 
@@ -1062,19 +1182,47 @@ class CacheIndex:
         self._scope(source, snapshot, corpus)
         return output
 
-    def info(self, source: TriageCache, *, snapshot: str | None = None, corpus: str | None = None):
+    def info(
+        self,
+        source: TriageCache,
+        *,
+        snapshot: str | None = None,
+        corpus: str | None = None,
+        snapshot_ids_limit: int = 0,
+        snapshot_ids_offset: int = 0,
+        checkpoint: str | None = None,
+    ):
         """Inspect identity-bound index metadata without auditing source payloads or freshness."""
+        _limit(snapshot_ids_limit, "snapshot_ids_limit", 100, 0)
+        _limit(snapshot_ids_offset, "snapshot_ids_offset", 2**63 - 1, 0)
+        if snapshot_ids_offset and not snapshot_ids_limit:
+            raise ValueError("snapshot_ids_offset requires snapshot_ids_limit")
+        if snapshot_ids_offset and checkpoint is None:
+            raise ValueError("snapshot_ids_offset requires checkpoint")
+        if checkpoint is not None and checkpoint != self.manifest["checksum"]:
+            raise ValueError("index metadata checkpoint changed")
+
         self._identity(source)
         if snapshot is not None or corpus is not None:
             self._selection(snapshot, corpus)
-        return {
-            "schema": "reposition.cache-info.v1",
-            **self.manifest,
+        snapshots = self.manifest["indexed_snapshots"]
+        page_end = min(len(snapshots), snapshot_ids_offset + snapshot_ids_limit)
+        result = {
+            "schema": "reposition.cache-info.v2",
+            **{key: value for key, value in self.manifest.items() if key != "indexed_snapshots"},
+            "indexed_snapshot_count": len(snapshots),
             "index_bytes": self.path.stat().st_size,
             "source_checkpoint_verified": False,
             "source_payloads_verified": False,
             "requests": 0,
         }
+        if snapshot_ids_limit:
+            result.update(
+                indexed_snapshots=snapshots[snapshot_ids_offset:page_end],
+                indexed_snapshots_offset=snapshot_ids_offset,
+                indexed_snapshots_next_offset=page_end if page_end < len(snapshots) else None,
+            )
+        return result
 
     def close(self):
         self.connection.close()
